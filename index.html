@@ -220,6 +220,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--te
 .mode-btn{flex:1;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:8px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--text-sec);transition:all .15s}
 .mode-btn.active{background:var(--white);color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.1)}
 
+/* PASTE ROSTER */
+.paste-panel{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;display:none}
+.paste-panel.open{display:block}
+.paste-textarea{width:100%;font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 12px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);outline:none;resize:vertical;min-height:130px;transition:border-color .15s;box-sizing:border-box}
+.paste-textarea:focus{border-color:var(--gold)}
+.paste-hint{font-size:11px;color:var(--text-light);margin-top:6px;font-style:italic}
+.paste-actions{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
+.paste-btn-fill{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:8px 20px;border-radius:20px;border:none;background:var(--navy);color:var(--gold);cursor:pointer}
+.paste-btn-cancel{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:8px 16px;border-radius:20px;border:1.5px solid var(--light-gray);background:var(--white);color:var(--text-sec);cursor:pointer}
+
 /* RESPONSIVE */
 @media(min-width:600px){
   .main{padding:24px}
@@ -358,6 +368,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--te
     <div class="mode-toggle">
       <button class="mode-btn active" onclick="setMode('full')" id="modeFull">Full Scouting</button>
       <button class="mode-btn" onclick="setMode('quick')" id="modeQuick">Quick (No Opponent Info)</button>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <button class="select-btn" onclick="togglePastePanel()" style="border-color:var(--gold);color:var(--gold);font-weight:600">Paste Opponent Roster</button>
+    </div>
+
+    <div class="paste-panel" id="pastePanel">
+      <div class="pship-panel-title">PASTE OPPONENT ROSTER</div>
+      <textarea class="paste-textarea" id="pasteText" placeholder="Paste any format — names and ratings will be detected automatically. Examples:
+
+Jane Smith 3.80
+Mary Jones 3.72
+S1: Alice Brown 3.75
+D1: Carol Davis 3.68 / Eve Wilson 3.65
+D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
+      <div class="paste-hint">Tip: Include position labels (S1, S2, D1, D2, D3) to assign players to specific lines. Without labels, players are auto-sorted by rating.</div>
+      <div class="paste-actions">
+        <button class="paste-btn-cancel" onclick="togglePastePanel()">Cancel</button>
+        <button class="paste-btn-fill" onclick="fillFromPaste()">Fill Lineup</button>
+      </div>
     </div>
 
     <div id="oppForm" class="card">
@@ -1281,6 +1311,81 @@ function showAlt(idx) {
   // Scroll back up and regenerate with that lineup as primary
   // For now just alert
   alert('Tap "Generate" again to see full details. Alternative lineups are shown for comparison.');
+}
+
+// ===================== PASTE ROSTER =====================
+function togglePastePanel() {
+  const panel = document.getElementById('pastePanel');
+  panel.classList.toggle('open');
+}
+
+function extractPlayer(text) {
+  const ratingMatch = text.match(/\b([34]\.\d{1,4})\b/);
+  if (!ratingMatch) return null;
+  const rating = parseFloat(ratingMatch[1]);
+  let name = text.replace(ratingMatch[0], '').replace(/[:\-|]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!name) name = 'Unknown';
+  return { name, rating };
+}
+
+function fillField(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value !== undefined && value !== null ? value : '';
+}
+
+function fillFromPaste() {
+  const text = document.getElementById('pasteText').value;
+  if (!text.trim()) return;
+
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  const posMap = { s1:[], s2:[], d1:[], d2:[], d3:[] };
+  let usedLabels = false;
+
+  for (const line of lines) {
+    const posMatch = line.match(/^(s1|s2|d1|d2|d3)\s*[:\s]\s*/i);
+    if (posMatch) {
+      usedLabels = true;
+      const pos = posMatch[1].toLowerCase();
+      const rest = line.slice(posMatch[0].length);
+      rest.split(/[\/,]/).map(p => p.trim()).filter(p => p).forEach(part => {
+        const player = extractPlayer(part);
+        if (player) posMap[pos].push(player);
+      });
+    }
+  }
+
+  if (usedLabels) {
+    fillField('opp_s1_name', posMap.s1[0]?.name); fillField('opp_s1_rating', posMap.s1[0]?.rating);
+    fillField('opp_s2_name', posMap.s2[0]?.name); fillField('opp_s2_rating', posMap.s2[0]?.rating);
+    fillField('opp_d1_p1_name', posMap.d1[0]?.name); fillField('opp_d1_p1_rating', posMap.d1[0]?.rating);
+    fillField('opp_d1_p2_name', posMap.d1[1]?.name); fillField('opp_d1_p2_rating', posMap.d1[1]?.rating);
+    fillField('opp_d2_p1_name', posMap.d2[0]?.name); fillField('opp_d2_p1_rating', posMap.d2[0]?.rating);
+    fillField('opp_d2_p2_name', posMap.d2[1]?.name); fillField('opp_d2_p2_rating', posMap.d2[1]?.rating);
+    fillField('opp_d3_p1_name', posMap.d3[0]?.name); fillField('opp_d3_p1_rating', posMap.d3[0]?.rating);
+    fillField('opp_d3_p2_name', posMap.d3[1]?.name); fillField('opp_d3_p2_rating', posMap.d3[1]?.rating);
+  } else {
+    const allPlayers = [];
+    for (const line of lines) {
+      line.split(/[\/,]/).map(p => p.trim()).filter(p => p).forEach(part => {
+        const player = extractPlayer(part);
+        if (player) allPlayers.push(player);
+      });
+    }
+    allPlayers.sort((a, b) => b.rating - a.rating);
+    const slots = [
+      ['opp_s1_name','opp_s1_rating'],['opp_s2_name','opp_s2_rating'],
+      ['opp_d1_p1_name','opp_d1_p1_rating'],['opp_d1_p2_name','opp_d1_p2_rating'],
+      ['opp_d2_p1_name','opp_d2_p1_rating'],['opp_d2_p2_name','opp_d2_p2_rating'],
+      ['opp_d3_p1_name','opp_d3_p1_rating'],['opp_d3_p2_name','opp_d3_p2_rating'],
+    ];
+    slots.forEach(([n, r], i) => {
+      fillField(n, allPlayers[i]?.name); fillField(r, allPlayers[i]?.rating);
+    });
+  }
+
+  if (!document.getElementById('modeFull').classList.contains('active')) setMode('full');
+  togglePastePanel();
+  document.getElementById('pasteText').value = '';
 }
 
 // Init
