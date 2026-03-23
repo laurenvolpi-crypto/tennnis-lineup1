@@ -220,6 +220,24 @@ body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--te
 .mode-btn{flex:1;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:8px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--text-sec);transition:all .15s}
 .mode-btn.active{background:var(--white);color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.1)}
 
+/* PRINT / SAVE */
+@media print {
+  .header,.step,.generate-wrap,.footer,.save-lineup-wrap{display:none!important}
+  .main{padding:0!important;max-width:100%!important}
+  body{background:white!important}
+  .results{display:block!important}
+}
+.save-lineup-wrap{text-align:center;margin-top:16px;padding-bottom:8px}
+.save-lineup-btn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:10px 24px;border-radius:20px;border:1.5px solid var(--navy);background:var(--white);color:var(--navy);cursor:pointer;transition:all .15s}
+.save-lineup-btn:hover{background:var(--navy);color:var(--white)}
+
+/* URL LOOKUP */
+.url-lookup-row{display:flex;gap:6px;align-items:center}
+.url-lookup-input{flex:1;font-family:'DM Sans',sans-serif;font-size:12px;padding:8px 10px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);outline:none;transition:border-color .15s;min-width:0}
+.url-lookup-input:focus{border-color:var(--gold)}
+.url-lookup-btn{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;padding:8px 12px;border-radius:var(--radius-sm);border:none;background:var(--navy);color:var(--gold);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.url-lookup-btn:disabled{opacity:.5;cursor:not-allowed}
+
 /* PASTE ROSTER */
 .paste-panel{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;display:none}
 .paste-panel.open{display:block}
@@ -268,6 +286,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--te
     <div class="add-panel" id="addPanel">
       <div class="add-panel-title">ADD NEW PLAYER</div>
       <div class="add-grid">
+        <div class="add-field" style="grid-column:1/-1">
+          <label class="add-label">TennisRecord URL (auto-fills name &amp; rating)</label>
+          <div class="url-lookup-row">
+            <input class="url-lookup-input" id="add_url" placeholder="https://www.tennisrecord.com/adult/profile.aspx?playername=...">
+            <button class="url-lookup-btn" id="addLookupBtn" onclick="lookupAddPlayerUrl()">Lookup</button>
+          </div>
+        </div>
         <div class="add-field">
           <label class="add-label">First Name</label>
           <input class="add-input" id="add_fname" placeholder="Jane">
@@ -383,7 +408,7 @@ Mary Jones 3.72
 S1: Alice Brown 3.75
 D1: Carol Davis 3.68 / Eve Wilson 3.65
 D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
-      <div class="paste-hint">Tip: Include position labels (S1, S2, D1, D2, D3) to assign players to specific lines. Without labels, players are auto-sorted by rating.</div>
+      <div class="paste-hint">Tip: Paste names + ratings, position labels (S1, S2, D1...), or TennisRecord URLs — ratings will be fetched automatically.</div>
       <div class="paste-actions">
         <button class="paste-btn-cancel" onclick="togglePastePanel()">Cancel</button>
         <button class="paste-btn-fill" onclick="fillFromPaste()">Fill Lineup</button>
@@ -1127,7 +1152,7 @@ function renderResults(lineups, opp) {
   }
 
   const results = document.getElementById('results');
-  results.innerHTML = html;
+  results.innerHTML = html + `<div class="save-lineup-wrap"><button class="save-lineup-btn" onclick="window.print()">&#8681; Save / Print Lineup</button></div>`;
   results.classList.add('visible');
   results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -1313,7 +1338,7 @@ function showAlt(idx) {
   alert('Tap "Generate" again to see full details. Alternative lineups are shown for comparison.');
 }
 
-// ===================== PASTE ROSTER =====================
+// ===================== PASTE ROSTER & URL LOOKUP =====================
 function togglePastePanel() {
   const panel = document.getElementById('pastePanel');
   panel.classList.toggle('open');
@@ -1333,11 +1358,67 @@ function fillField(id, value) {
   if (el) el.value = value !== undefined && value !== null ? value : '';
 }
 
-function fillFromPaste() {
+async function fetchTennisRecordRating(url) {
+  try {
+    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    const resp = await fetch(proxy);
+    const data = await resp.json();
+    const html = data.contents || '';
+    const ratingMatch = html.match(/(\d\.\d{4})/);
+    if (!ratingMatch) return null;
+    const rating = parseFloat(ratingMatch[1]);
+    const nameMatch = url.match(/playername=([^&]+)/i);
+    let name = nameMatch ? decodeURIComponent(nameMatch[1]).replace(/\+/g, ' ') : null;
+    if (!name) {
+      const titleMatch = html.match(/<title[^>]*>([^<|]+)/i);
+      name = titleMatch ? titleMatch[1].trim() : 'Unknown';
+    }
+    return { name, rating };
+  } catch(e) { return null; }
+}
+
+async function lookupAddPlayerUrl() {
+  const url = document.getElementById('add_url').value.trim();
+  if (!url) return;
+  const btn = document.getElementById('addLookupBtn');
+  btn.textContent = '...'; btn.disabled = true;
+  const player = await fetchTennisRecordRating(url);
+  btn.textContent = 'Lookup'; btn.disabled = false;
+  if (!player) { alert('Could not fetch rating. Check the URL and try again.'); return; }
+  if (player.name && player.name !== 'Unknown') {
+    const parts = player.name.trim().split(/\s+/);
+    document.getElementById('add_fname').value = parts[0] || '';
+    document.getElementById('add_lname').value = parts.slice(1).join(' ') || '';
+  }
+  document.getElementById('add_rating').value = player.rating;
+}
+
+async function fillFromPaste() {
   const text = document.getElementById('pasteText').value;
   if (!text.trim()) return;
 
-  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  const fillBtn = document.querySelector('.paste-btn-fill');
+  fillBtn.textContent = 'Loading...'; fillBtn.disabled = true;
+
+  // Separate URL lines from text lines
+  const urlLines = [], nonUrlLines = [];
+  text.split('\n').forEach(line => {
+    (/https?:\/\/.*tennisrecord/i.test(line) ? urlLines : nonUrlLines).push(line.trim());
+  });
+
+  // Fetch any URLs in parallel
+  const urlPlayers = [];
+  if (urlLines.length) {
+    const fetches = urlLines.map(line => {
+      const m = line.match(/https?:\/\/\S+/i);
+      return m ? fetchTennisRecordRating(m[0]) : Promise.resolve(null);
+    });
+    const results = await Promise.allSettled(fetches);
+    results.forEach(r => { if (r.status === 'fulfilled' && r.value) urlPlayers.push(r.value); });
+  }
+
+  // Parse non-URL lines
+  const lines = nonUrlLines.filter(l => l);
   const posMap = { s1:[], s2:[], d1:[], d2:[], d3:[] };
   let usedLabels = false;
 
@@ -1355,6 +1436,11 @@ function fillFromPaste() {
   }
 
   if (usedLabels) {
+    // Add URL-fetched players to unassigned positions
+    urlPlayers.forEach(p => {
+      const emptyPos = ['s1','s2','d1','d2','d3'].find(k => posMap[k].length < (k==='s1'||k==='s2'?1:2));
+      if (emptyPos) posMap[emptyPos].push(p);
+    });
     fillField('opp_s1_name', posMap.s1[0]?.name); fillField('opp_s1_rating', posMap.s1[0]?.rating);
     fillField('opp_s2_name', posMap.s2[0]?.name); fillField('opp_s2_rating', posMap.s2[0]?.rating);
     fillField('opp_d1_p1_name', posMap.d1[0]?.name); fillField('opp_d1_p1_rating', posMap.d1[0]?.rating);
@@ -1364,7 +1450,7 @@ function fillFromPaste() {
     fillField('opp_d3_p1_name', posMap.d3[0]?.name); fillField('opp_d3_p1_rating', posMap.d3[0]?.rating);
     fillField('opp_d3_p2_name', posMap.d3[1]?.name); fillField('opp_d3_p2_rating', posMap.d3[1]?.rating);
   } else {
-    const allPlayers = [];
+    const allPlayers = [...urlPlayers];
     for (const line of lines) {
       line.split(/[\/,]/).map(p => p.trim()).filter(p => p).forEach(part => {
         const player = extractPlayer(part);
@@ -1383,6 +1469,7 @@ function fillFromPaste() {
     });
   }
 
+  fillBtn.textContent = 'Fill Lineup'; fillBtn.disabled = false;
   if (!document.getElementById('modeFull').classList.contains('active')) setMode('full');
   togglePastePanel();
   document.getElementById('pasteText').value = '';
