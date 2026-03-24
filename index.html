@@ -87,6 +87,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--te
 .opp-input:focus{border-color:var(--gold)}
 .opp-input::placeholder{color:var(--text-light)}
 .opp-input.rating-input{width:70px;flex:none;text-align:center}
+.opp-link-btn{width:34px;height:38px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all .15s;color:var(--text-light);padding:0}
+.opp-link-btn:hover{border-color:var(--gold);color:var(--gold)}
+.opp-link-btn.active{border-color:var(--gold);background:var(--gold-dim);color:var(--gold)}
+.opp-url-row{display:none;gap:8px;margin-top:-2px;padding-bottom:6px;animation:fadeUp .2s ease both}
+.opp-url-row.open{display:flex}
+.opp-url-input{flex:1;font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 10px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);outline:none;transition:border-color .15s;background:var(--white);color:var(--text-sec)}
+.opp-url-input:focus{border-color:var(--gold)}
+.opp-url-input::placeholder{color:var(--text-light)}
 .opp-divider{height:1px;background:var(--light-gray);margin:12px 0}
 .opp-vs{font-size:11px;color:var(--text-light);font-weight:600;text-align:center;margin:2px 0}
 
@@ -448,6 +456,11 @@ D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
           <label>Name</label>
           <input class="opp-input" id="opp_s1_name" placeholder="Opponent name (optional)">
           <input class="opp-input rating-input" id="opp_s1_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_s1_link_btn" onclick="toggleOppUrl('s1',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_s1_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_s1_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('s1')">
         </div>
       </div>
       <div class="opp-divider"></div>
@@ -457,6 +470,11 @@ D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
           <label>Name</label>
           <input class="opp-input" id="opp_s2_name" placeholder="Opponent name (optional)">
           <input class="opp-input rating-input" id="opp_s2_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_s2_link_btn" onclick="toggleOppUrl('s2',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_s2_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_s2_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('s2')">
         </div>
       </div>
       <div class="opp-divider"></div>
@@ -466,11 +484,21 @@ D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
           <label>P1</label>
           <input class="opp-input" id="opp_d1_p1_name" placeholder="Player 1 name">
           <input class="opp-input rating-input" id="opp_d1_p1_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_d1_p1_link_btn" onclick="toggleOppUrl('d1_p1',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_d1_p1_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_d1_p1_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d1_p1')">
         </div>
         <div class="opp-row">
           <label>P2</label>
           <input class="opp-input" id="opp_d1_p2_name" placeholder="Player 2 name">
           <input class="opp-input rating-input" id="opp_d1_p2_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_d1_p2_link_btn" onclick="toggleOppUrl('d1_p2',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_d1_p2_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_d1_p2_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d1_p2')">
         </div>
       </div>
       <div class="opp-divider"></div>
@@ -480,11 +508,21 @@ D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
           <label>P1</label>
           <input class="opp-input" id="opp_d2_p1_name" placeholder="Player 1 name">
           <input class="opp-input rating-input" id="opp_d2_p1_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_d2_p1_link_btn" onclick="toggleOppUrl('d2_p1',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_d2_p1_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_d2_p1_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d2_p1')">
         </div>
         <div class="opp-row">
           <label>P2</label>
           <input class="opp-input" id="opp_d2_p2_name" placeholder="Player 2 name">
           <input class="opp-input rating-input" id="opp_d2_p2_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_d2_p2_link_btn" onclick="toggleOppUrl('d2_p2',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_d2_p2_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_d2_p2_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d2_p2')">
         </div>
       </div>
       <div class="opp-divider"></div>
@@ -494,11 +532,21 @@ D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
           <label>P1</label>
           <input class="opp-input" id="opp_d3_p1_name" placeholder="Player 1 name">
           <input class="opp-input rating-input" id="opp_d3_p1_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_d3_p1_link_btn" onclick="toggleOppUrl('d3_p1',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_d3_p1_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_d3_p1_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d3_p1')">
         </div>
         <div class="opp-row">
           <label>P2</label>
           <input class="opp-input" id="opp_d3_p2_name" placeholder="Player 2 name">
           <input class="opp-input rating-input" id="opp_d3_p2_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_d3_p2_link_btn" onclick="toggleOppUrl('d3_p2',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_d3_p2_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_d3_p2_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d3_p2')">
         </div>
       </div>
     </div>
@@ -1174,6 +1222,17 @@ function permute3(arr) {
   ];
 }
 
+function toggleOppUrl(key, event) {
+  event.stopPropagation();
+  const row = document.getElementById('opp_'+key+'_url_row');
+  row.classList.toggle('open');
+  if (row.classList.contains('open')) document.getElementById('opp_'+key+'_url').focus();
+}
+function updateOppLinkBtn(key) {
+  const url = document.getElementById('opp_'+key+'_url').value.trim();
+  document.getElementById('opp_'+key+'_link_btn').classList.toggle('active', url.length > 0);
+}
+
 function getOpponentData() {
   if (mode === 'quick') {
     return {
@@ -1184,17 +1243,18 @@ function getOpponentData() {
       d3: { p1:{name:'Opp D3-1',rating:3.65}, p2:{name:'Opp D3-2',rating:3.65} },
     };
   }
-  const v = id => document.getElementById(id).value;
+  const v = id => document.getElementById(id)?.value || '';
   const n = id => parseFloat(v(id)) || null;
+  const u = key => v('opp_'+key+'_url').trim();
   return {
-    s1: { name: v('opp_s1_name') || 'Opponent S1', rating: n('opp_s1_rating') || 3.75 },
-    s2: { name: v('opp_s2_name') || 'Opponent S2', rating: n('opp_s2_rating') || 3.70 },
-    d1: { p1:{ name:v('opp_d1_p1_name')||'Opp', rating:n('opp_d1_p1_rating')||3.75 },
-          p2:{ name:v('opp_d1_p2_name')||'Opp', rating:n('opp_d1_p2_rating')||3.75 }},
-    d2: { p1:{ name:v('opp_d2_p1_name')||'Opp', rating:n('opp_d2_p1_rating')||3.70 },
-          p2:{ name:v('opp_d2_p2_name')||'Opp', rating:n('opp_d2_p2_rating')||3.70 }},
-    d3: { p1:{ name:v('opp_d3_p1_name')||'Opp', rating:n('opp_d3_p1_rating')||3.65 },
-          p2:{ name:v('opp_d3_p2_name')||'Opp', rating:n('opp_d3_p2_rating')||3.65 }},
+    s1: { name: v('opp_s1_name') || 'Opponent S1', rating: n('opp_s1_rating') || 3.75, url: u('s1') },
+    s2: { name: v('opp_s2_name') || 'Opponent S2', rating: n('opp_s2_rating') || 3.70, url: u('s2') },
+    d1: { p1:{ name:v('opp_d1_p1_name')||'Opp', rating:n('opp_d1_p1_rating')||3.75, url:u('d1_p1') },
+          p2:{ name:v('opp_d1_p2_name')||'Opp', rating:n('opp_d1_p2_rating')||3.75, url:u('d1_p2') }},
+    d2: { p1:{ name:v('opp_d2_p1_name')||'Opp', rating:n('opp_d2_p1_rating')||3.70, url:u('d2_p1') },
+          p2:{ name:v('opp_d2_p2_name')||'Opp', rating:n('opp_d2_p2_rating')||3.70, url:u('d2_p2') }},
+    d3: { p1:{ name:v('opp_d3_p1_name')||'Opp', rating:n('opp_d3_p1_rating')||3.65, url:u('d3_p1') },
+          p2:{ name:v('opp_d3_p2_name')||'Opp', rating:n('opp_d3_p2_rating')||3.65, url:u('d3_p2') }},
   };
 }
 
@@ -1370,7 +1430,7 @@ function renderSinglesCard(label, playerId, oppData, score) {
           </div>
           <div class="line-vs">VS</div>
           <div class="line-opp">
-            <div class="line-opp-name">${oppData.name || 'TBD'}</div>
+            <div class="line-opp-name">${oppData.url ? `<a href="${oppData.url}" target="_blank" rel="noopener" style="color:var(--text-sec);text-decoration:none;border-bottom:1px solid var(--gold)">${oppData.name || 'TBD'}</a>` : (oppData.name || 'TBD')}</div>
             <div class="line-opp-rating">${oppData.rating ? oppData.rating.toFixed(2) : '?'}</div>
           </div>
         </div>
@@ -1444,8 +1504,8 @@ function renderDoublesCard(label, teamIds, oppData, score) {
           </div>
           <div class="line-vs">VS</div>
           <div class="line-opp">
-            <div class="line-opp-name">${oppData.p1.name || 'TBD'} <span class="line-opp-rating">(${oppData.p1.rating ? oppData.p1.rating.toFixed(2) : '?'})</span></div>
-            <div class="line-opp-name" style="margin-top:4px">${oppData.p2.name || 'TBD'} <span class="line-opp-rating">(${oppData.p2.rating ? oppData.p2.rating.toFixed(2) : '?'})</span></div>
+            <div class="line-opp-name">${oppData.p1.url ? `<a href="${oppData.p1.url}" target="_blank" rel="noopener" style="color:var(--text-sec);text-decoration:none;border-bottom:1px solid var(--gold)">${oppData.p1.name||'TBD'}</a>` : (oppData.p1.name||'TBD')} <span class="line-opp-rating">(${oppData.p1.rating ? oppData.p1.rating.toFixed(2) : '?'})</span></div>
+            <div class="line-opp-name" style="margin-top:4px">${oppData.p2.url ? `<a href="${oppData.p2.url}" target="_blank" rel="noopener" style="color:var(--text-sec);text-decoration:none;border-bottom:1px solid var(--gold)">${oppData.p2.name||'TBD'}</a>` : (oppData.p2.name||'TBD')} <span class="line-opp-rating">(${oppData.p2.rating ? oppData.p2.rating.toFixed(2) : '?'})</span></div>
           </div>
         </div>
         <div class="line-reasoning">${reasoning}</div>
