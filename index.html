@@ -227,6 +227,32 @@ body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--te
   body{background:white!important}
   .results{display:block!important}
 }
+
+/* PLAYER PROFILE MODAL */
+.pmodal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;align-items:flex-end;justify-content:center}
+.pmodal-overlay.open{display:flex}
+.pmodal{background:var(--white);border-radius:16px 16px 0 0;width:100%;max-width:520px;max-height:84vh;overflow-y:auto;animation:slideUp .28s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.pmodal-handle{width:36px;height:4px;border-radius:2px;background:var(--light-gray);margin:12px auto 4px}
+.pmodal-header{display:flex;align-items:flex-start;justify-content:space-between;padding:12px 20px 10px}
+.pmodal-name{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;color:var(--navy);line-height:1}
+.pmodal-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--off-white);color:var(--text-sec);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.pmodal-badges{display:flex;flex-wrap:wrap;gap:5px;padding:0 20px 12px}
+.pmodal-body{padding:0 20px 28px}
+.pmodal-sec-title{font-size:10px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.pmodal-stats{display:flex;gap:10px;margin-bottom:16px}
+.pmodal-stat{flex:1;background:var(--off-white);border-radius:var(--radius-sm);padding:10px;text-align:center}
+.pmodal-stat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--navy);line-height:1}
+.pmodal-stat-lbl{font-size:10px;color:var(--text-sec);margin-top:3px}
+.pmodal-pship{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--off-white);margin-bottom:6px;font-size:13px}
+.pmodal-pship-name{font-weight:600;flex:1}
+.pmodal-pship-note{font-size:11px;color:var(--text-light);flex:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmodal-pship-rec{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;flex-shrink:0}
+.pmodal-pattern{font-size:13px;color:var(--text);line-height:1.5;padding:9px 12px;background:var(--off-white);border-radius:var(--radius-sm);margin-bottom:6px}
+.pmodal-divider{height:1px;background:var(--light-gray);margin:14px 0}
+.player-name-link{cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.player-name-link:hover .pinfo-icon{opacity:1}
+.pinfo-icon{font-size:12px;color:var(--gold);opacity:.6;transition:opacity .15s;font-weight:400;font-family:'DM Sans',sans-serif}
 .save-lineup-wrap{text-align:center;margin-top:16px;padding-bottom:8px}
 .save-lineup-btn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:10px 24px;border-radius:20px;border:1.5px solid var(--navy);background:var(--white);color:var(--navy);cursor:pointer;transition:all .15s}
 .save-lineup-btn:hover{background:var(--navy);color:var(--white)}
@@ -489,6 +515,18 @@ D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
   <!-- RESULTS -->
   <div class="results" id="results"></div>
 
+</div>
+
+<div class="pmodal-overlay" id="pmodalOverlay" onclick="closePModal(event)">
+  <div class="pmodal" id="pmodal">
+    <div class="pmodal-handle"></div>
+    <div class="pmodal-header">
+      <div class="pmodal-name" id="pmodal-name"></div>
+      <button class="pmodal-close" onclick="document.getElementById('pmodalOverlay').classList.remove('open')">&times;</button>
+    </div>
+    <div class="pmodal-badges" id="pmodal-badges"></div>
+    <div class="pmodal-body" id="pmodal-body"></div>
+  </div>
 </div>
 
 <div class="footer">Rafael RC Lineup Optimizer &middot; 2026 Spring 4.0 Women's &middot; 18 Players</div>
@@ -869,7 +907,7 @@ function renderRoster() {
         <input type="checkbox" ${checked ? 'checked' : ''} id="cb_${p.id}">
         <div class="player-check">${checked ? '&#10003;' : ''}</div>
         <div class="player-info">
-          <div class="player-name">${p.name}</div>
+          <div class="player-name player-name-link" onclick="openPlayerModal('${p.id}',event)">${p.name} <span class="pinfo-icon">ⓘ</span></div>
           <div class="player-meta">${tagsHTML}</div>
           <div class="player-meta" style="margin-top:3px;font-size:10px;color:var(--text-light)">${recText}</div>
         </div>
@@ -890,6 +928,140 @@ function togglePlayer(id, row) {
 
 function selectAll() { ROSTER.forEach(p => available.add(p.id)); renderRoster(); updateCount(); }
 function selectNone() { available.clear(); renderRoster(); updateCount(); }
+
+function closePModal(event) {
+  if (event.target === document.getElementById('pmodalOverlay')) {
+    document.getElementById('pmodalOverlay').classList.remove('open');
+  }
+}
+
+function openPlayerModal(id, event) {
+  event.stopPropagation();
+  const p = ROSTER.find(x => x.id === id);
+  if (!p) return;
+
+  const total25 = p.record25.w + p.record25.l;
+  const total26 = p.record26.w + p.record26.l;
+  const pct25 = total25 > 0 ? Math.round((p.record25.w / total25) * 100) : null;
+  const pct26 = total26 > 0 ? Math.round((p.record26.w / total26) * 100) : null;
+  const winsAll = p.record25.w + p.record26.w;
+  const totalAll = total25 + total26;
+  const pctAll = totalAll > 0 ? Math.round((winsAll / totalAll) * 100) : null;
+
+  // Header name
+  document.getElementById('pmodal-name').textContent = p.name;
+
+  // Badges
+  let badges = `<span class="player-tag tag-rating">${p.rating.toFixed(2)}</span>`;
+  if (p.captain) badges += `<span class="player-tag tag-captain">Captain</span>`;
+  if (p.line === 'singles') badges += `<span class="player-tag tag-singles">Singles</span>`;
+  else if (p.line === 'both') badges += `<span class="player-tag tag-singles">S+D</span>`;
+  if (p.side === 'ad') badges += `<span class="player-tag tag-ad">Ad Side</span>`;
+  else if (p.side === 'deuce') badges += `<span class="player-tag tag-deuce">Deuce Side</span>`;
+  else badges += `<span class="player-tag tag-ad">Flex</span>`;
+  (p.tags||[]).forEach(t => {
+    if (t === 'Hot') badges += `<span class="player-tag tag-hot">Hot</span>`;
+    else if (t === 'Caution') badges += `<span class="player-tag tag-warn">Caution</span>`;
+    else if (t === 'Captain') {}
+    else if (t !== 'New' && t !== 'Added') badges += `<span class="player-tag" style="background:#6366F122;color:#6366F1">${t}</span>`;
+  });
+  if (!p.tags.includes('Hot') && pct26 !== null && pct26 >= 65 && total26 >= 3)
+    badges += `<span class="player-tag tag-hot">Hot in 2026</span>`;
+  if (!p.tags.includes('Caution') && pct26 !== null && pct26 <= 30 && total26 >= 4)
+    badges += `<span class="player-tag tag-warn">Struggling</span>`;
+  document.getElementById('pmodal-badges').innerHTML = badges;
+
+  // Body
+  let html = '';
+
+  // Season stats
+  html += `<div class="pmodal-sec-title">Season Records — W 3.5+4.0 Only</div>
+  <div class="pmodal-stats">
+    <div class="pmodal-stat">
+      <div class="pmodal-stat-val">${total26 > 0 ? p.record26.w+'-'+p.record26.l : '—'}</div>
+      <div class="pmodal-stat-lbl">2026${pct26 !== null ? ' · '+pct26+'%' : ''}</div>
+    </div>
+    <div class="pmodal-stat">
+      <div class="pmodal-stat-val">${total25 > 0 ? p.record25.w+'-'+p.record25.l : '—'}</div>
+      <div class="pmodal-stat-lbl">2025${pct25 !== null ? ' · '+pct25+'%' : ''}</div>
+    </div>
+    <div class="pmodal-stat">
+      <div class="pmodal-stat-val">${pctAll !== null ? pctAll+'%' : '—'}</div>
+      <div class="pmodal-stat-lbl">Career W%</div>
+    </div>
+  </div>`;
+
+  // Partnerships
+  const pships = PARTNERSHIPS.filter(ps => ps.p.includes(p.id) && !ps.estimated);
+  if (pships.length > 0) {
+    html += `<div class="pmodal-divider"></div><div class="pmodal-sec-title">Partnership History</div>`;
+    pships.forEach(ps => {
+      const pid = ps.p.find(x => x !== p.id);
+      const partner = ROSTER.find(x => x.id === pid);
+      const pname = partner ? partner.name.split(' ')[0] : pid;
+      const tot = ps.w + ps.l;
+      const pp = tot > 0 ? Math.round((ps.w/tot)*100) : 0;
+      const cls = pp >= 60 ? 'good' : pp >= 40 ? 'ok' : 'bad';
+      const arrow = ps.trending === 'up' ? '↑' : ps.trending === 'down' ? '↓' : '→';
+      html += `<div class="pmodal-pship">
+        <div class="pmodal-pship-name">${pname}</div>
+        <div class="pmodal-pship-note">${ps.note}</div>
+        <div class="pmodal-pship-rec pship-item-record ${cls}">${ps.w}-${ps.l}</div>
+        <div style="font-size:13px">${arrow}</div>
+      </div>`;
+    });
+  }
+
+  // Patterns
+  const patterns = [];
+
+  if (pct26 !== null && pct26 >= 65 && total26 >= 3)
+    patterns.push({ icon:'🔥', text:`Hot form — ${p.record26.w}-${p.record26.l} (${pct26}%) in 2026` });
+  else if (pct26 !== null && pct26 <= 33 && total26 >= 4)
+    patterns.push({ icon:'⚠️', text:`Struggling in 2026 — ${p.record26.w}-${p.record26.l} (${pct26}%)` });
+  else if (total26 === 0)
+    patterns.push({ icon:'ℹ️', text:'No 2026 women\'s 3.5/4.0 matches yet this season' });
+
+  if (pct25 !== null && pct25 >= 65 && total25 >= 5)
+    patterns.push({ icon:'📈', text:`Strong 2025 season — ${p.record25.w}-${p.record25.l} (${pct25}%)` });
+  else if (pct25 !== null && pct25 <= 35 && total25 >= 6)
+    patterns.push({ icon:'📉', text:`Difficult 2025 — ${p.record25.w}-${p.record25.l} (${pct25}%)` });
+
+  if (p.side === 'ad') patterns.push({ icon:'🎾', text:'Ad-side specialist — place on the left court' });
+  else if (p.side === 'deuce') patterns.push({ icon:'🎾', text:'Deuce-side specialist — place on the right court' });
+  else patterns.push({ icon:'🔄', text:'Flexible — can play either side' });
+
+  if (p.singlesCapable && p.singlesScore >= 60)
+    patterns.push({ icon:'⭐', text:`Strong singles option (score: ${p.singlesScore})` });
+  else if (p.singlesCapable)
+    patterns.push({ icon:'✓', text:`Singles-capable if needed` });
+
+  if (p.rating >= 3.85)
+    patterns.push({ icon:'💪', text:`Top-rated (${p.rating.toFixed(2)}) — anchor your lineup around her` });
+  else if (p.rating <= 3.20)
+    patterns.push({ icon:'ℹ️', text:`Lower rating (${p.rating.toFixed(2)}) — pair with higher-rated partner` });
+
+  const avoids = AVOID.filter(a => a.p[0] === p.id || (a.p[1] !== '*' && a.p[1] === p.id));
+  avoids.forEach(a => {
+    const pid = a.p[0] === p.id ? a.p[1] : a.p[0];
+    if (pid === '*') {
+      patterns.push({ icon:'🚫', text:a.reason });
+    } else {
+      const pname = ROSTER.find(x => x.id === pid)?.name.split(' ')[0] || pid;
+      patterns.push({ icon:'🚫', text:`Avoid with ${pname} — ${a.reason}` });
+    }
+  });
+
+  if (patterns.length > 0) {
+    html += `<div class="pmodal-divider"></div><div class="pmodal-sec-title">Player Patterns</div>`;
+    patterns.forEach(pt => {
+      html += `<div class="pmodal-pattern">${pt.icon} ${pt.text}</div>`;
+    });
+  }
+
+  document.getElementById('pmodal-body').innerHTML = html;
+  document.getElementById('pmodalOverlay').classList.add('open');
+}
 
 function updateCount() {
   const n = available.size;
