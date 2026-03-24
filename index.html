@@ -1046,8 +1046,13 @@ function optimize() {
     for (let sj = si+1; sj < Math.min(sCandidates.length, 6); sj++) {
       const s1player = sCandidates[si];
       const s2player = sCandidates[sj];
-      // Remaining for doubles
-      const doublesPool = avail.filter(p => p.id !== s1player.id && p.id !== s2player.id).map(p => p.id);
+      // Remaining for doubles — cap at top 12 by rating×winPct to keep combinations fast
+      const doublesPoolFull = avail.filter(p => p.id !== s1player.id && p.id !== s2player.id);
+      const doublesPoolCapped = doublesPoolFull
+        .sort((a, b) => (b.rating * (0.5 + b.winPct40)) - (a.rating * (0.5 + a.winPct40)))
+        .slice(0, 12)
+        .map(p => p.id);
+      const doublesPool = doublesPoolCapped;
       if (doublesPool.length < 6) continue;
 
       // Choose 6 from pool (if > 6)
