@@ -1208,8 +1208,8 @@ function optimize() {
     (opp.d3.p1.rating + opp.d3.p2.rating)/2,
   ];
 
-  // Find singles candidates (sorted by singlesScore desc)
-  const sCandidates = [...avail].sort((a,b) => b.singlesScore - a.singlesScore);
+  // Find singles candidates — only players marked singlesCapable, sorted by singlesScore desc
+  const sCandidates = avail.filter(p => p.singlesCapable).sort((a,b) => b.singlesScore - a.singlesScore);
 
   let allLineups = [];
 
