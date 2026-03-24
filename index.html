@@ -645,7 +645,11 @@ const PAVIA_WARNING = "Meredith Pavia is 1-15 at 4.0 across 2025-2026. High risk
 // Merge base roster with any players saved in localStorage
 function loadRoster() {
   const saved = JSON.parse(localStorage.getItem('rrc_added_players') || '[]');
-  return [...BASE_ROSTER, ...saved];
+  const baseIds = new Set(BASE_ROSTER.map(p => p.id));
+  // Filter out any saved players whose name matches a BASE_ROSTER entry (catches old adds)
+  const baseNames = new Set(BASE_ROSTER.map(p => p.name.toLowerCase()));
+  const newSaved = saved.filter(p => !baseIds.has(p.id) && !baseNames.has(p.name.toLowerCase()));
+  return [...BASE_ROSTER, ...newSaved];
 }
 function saveAddedPlayers() {
   const added = ROSTER.filter(p => p.added);
