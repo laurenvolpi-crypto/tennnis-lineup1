@@ -55,8 +55,29 @@ PLAYER_URLS = {
 HEADERS = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"}
 
 
+def fetch_dynamic_rating(soup):
+    """Extract Estimated Dynamic Rating from a parsed profile page."""
+    m = re.search(r'Estimated Dynamic Rating\s+([\d.]+)', soup.get_text())
+    if m:
+        return round(float(m.group(1)), 2)
+    return None
+
+
+def update_rating(path, player_id, new_rating):
+    """Update the rating field for a player in index.html."""
+    with open(path, "r", encoding="utf-8") as f:
+        html = f.read()
+    pattern = re.compile(r'(id:"' + re.escape(player_id) + r'", name:"[^"]+", rating:)([\d.]+)')
+    new_html, count = pattern.subn(rf'\g<1>{new_rating}', html)
+    if count == 0:
+        return False
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(new_html)
+    return True
+
+
 def fetch_record(player_id, base_url):
-    """Fetch 2025 and 2026 Adult-only W/L from TennisRecord.com."""
+    """Fetch 2025 and 2026 Adult-only W/L and dynamic rating from TennisRecord.com."""
     # lt=-1 = Adult (excludes Mixed, Combo); mt=0 = All match types; yr=0 = All years
     sep = "&" if "?" in base_url else "?"
     url = base_url + sep + "mt=0&lt=-1&yr=0"
@@ -90,7 +111,8 @@ def fetch_record(player_id, base_url):
             except ValueError:
                 pass
 
-    return records
+    dynamic_rating = fetch_dynamic_rating(soup)
+    return records, dynamic_rating
 
 
 def build_note(w, l):
@@ -179,16 +201,20 @@ def main():
 
     for player_id, url in PLAYER_URLS.items():
         print(f"Fetching {player_id}...")
-        records = fetch_record(player_id, url)
-        if not records:
+        result = fetch_record(player_id, url)
+        if not result:
             failed.append(player_id)
             continue
 
+        records, dynamic_rating = result
         r25 = records.get("2025", (0, 0))
         r26 = records.get("2026", (0, 0))
-        print(f"  2025: {r25[0]}-{r25[1]}  |  2026: {r26[0]}-{r26[1]}")
+        rating_str = f"{dynamic_rating}" if dynamic_rating else "N/A"
+        print(f"  Rating: {rating_str}  |  2025: {r25[0]}-{r25[1]}  |  2026: {r26[0]}-{r26[1]}")
 
         ok = update_html(html_path, player_id, r25, r26)
+        if dynamic_rating:
+            update_rating(html_path, player_id, dynamic_rating)
         if ok:
             updated.append(player_id)
         else:
