@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-Auto-update player USTA records in index.html from TennisRecord.com.
-Fetches Adult-only matches (excludes Mixed and Combo) for 2025 and 2026.
-Run every Friday via scheduled task.
+Auto-update player USTA records, ratings, highlights, and partnership trending
+in index.html from TennisRecord.com. Run every Friday via scheduled task.
 """
 
 import re
@@ -123,6 +122,160 @@ def build_note(w, l):
     return f"{w}-{l} ({pct}%)"
 
 
+# Tags that are permanent (never auto-removed)
+PERMANENT_TAGS = {
+    "pham":       [],
+    "hoffman":    ["Captain"],
+    "burner":     ["Singles Specialist"],
+    "mcmillan":   ["Breakout"],
+    "liu":        ["Pair w/ Rice Only"],
+}
+
+def compute_tags(player_id, w25, l25, w26, l26):
+    """Derive performance tags from records. Permanent tags are always kept."""
+    tags = list(PERMANENT_TAGS.get(player_id, []))
+    total26 = w26 + l26
+    total25 = w25 + l25
+    pct26 = round(w26 / total26 * 100) if total26 > 0 else None
+    pct25 = round(w25 / total25 * 100) if total25 > 0 else None
+
+    if pct26 is not None and pct26 >= 70 and total26 >= 3:
+        tags.append("Hot")
+    elif pct26 is not None and pct26 <= 30 and total26 >= 3:
+        tags.append("Caution")
+    elif total26 == 0 and total25 == 0:
+        pass  # no data
+    elif pct26 is not None and 55 <= pct26 < 70 and total26 >= 4:
+        # trending up only if 2026 is meaningfully better than 2025
+        if pct25 is None or pct26 > pct25 + 5:
+            tags.append("Trending Up")
+
+    return tags
+
+
+def update_tags(path, player_id, new_tags):
+    """Update the tags array for a player in index.html."""
+    with open(path, "r", encoding="utf-8") as f:
+        html = f.read()
+    block_start = re.search(r'id:"' + re.escape(player_id) + r'"', html)
+    if not block_start:
+        return False
+    next_player = re.search(r'id:"\w+"', html[block_start.end():])
+    block_end = block_start.end() + next_player.start() if next_player else len(html)
+    segment = html[block_start.start():block_end]
+
+    tags_js = "[" + ",".join(f'"{t}"' for t in new_tags) + "]"
+    segment = re.sub(r'tags:\[[^\]]*\]', f'tags:{tags_js}', segment)
+    new_html = html[:block_start.start()] + segment + html[block_end:]
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(new_html)
+    return True
+
+
+def update_winpct40(path, player_id, w25, l25, w26, l26):
+    """Recalculate and update winPct40 from fresh record totals."""
+    total = w25 + l25 + w26 + l26
+    pct = round((w25 + w26) / total, 2) if total > 0 else 0.0
+    with open(path, "r", encoding="utf-8") as f:
+        html = f.read()
+    pattern = re.compile(
+        r'(id:"' + re.escape(player_id) + r'".*?winPct40:)([\d.]+)',
+        re.DOTALL,
+    )
+    new_html, count = pattern.subn(rf'\g<1>{pct}', html, count=1)
+    if count == 0:
+        return False
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(new_html)
+    return True
+
+
+def update_singles_reasoning(path, w25, l25, w26, l26):
+    """Dynamically update Burner and Pavia's hardcoded singles reasoning text."""
+    with open(path, "r", encoding="utf-8") as f:
+        html = f.read()
+
+    # Burner
+    total26b = w26 + l26
+    pct26b = round(w26 / total26b * 100) if total26b > 0 else 0
+    pct25b = round(w25 / (w25 + l25) * 100) if (w25 + l25) > 0 else 0
+    if pct26b < 35 and total26b >= 5:
+        burner_text = (
+            f'<strong>Singles specialist.</strong> Strong 2025 ({w25}-{l25}, {pct25b}%). '
+            f'<strong style="color:var(--red)">Caution: {w26}-{l26} in 2026</strong> '
+            f'— significant drop in form. Monitor closely before placing.'
+        )
+    else:
+        burner_text = (
+            f'<strong>Singles specialist.</strong> '
+            f'2025: {w25}-{l25} ({pct25b}%). '
+            f'2026: {w26}-{l26} ({pct26b}%).'
+        )
+    html = re.sub(
+        r"(if \(p\.id === 'burner'\) \{\s*reasoning = `)([^`]+)(`)",
+        rf'\g<1>{burner_text}\g<3>',
+        html,
+    )
+
+    # Pavia — uses its own records passed separately, fetch from HTML
+    m = re.search(r'id:"pavia".*?record25:\{w:(\d+),l:(\d+).*?record26:\{w:(\d+),l:(\d+)', html, re.DOTALL)
+    if m:
+        pw25, pl25, pw26, pl26 = int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4))
+        total_p = pw25 + pl25 + pw26 + pl26
+        wins_p = pw25 + pw26
+        pct_p = round(wins_p / total_p * 100) if total_p > 0 else 0
+        pavia_text = (
+            f'<strong style="color:var(--red)">WARNING:</strong> '
+            f'Meredith is {wins_p}-{total_p - wins_p} at 4.0 across 2025-2026 ({pct_p}% win rate). '
+            f'High risk placement.'
+        )
+        html = re.sub(
+            r"(else if \(p\.id === 'pavia'\) \{\s*reasoning = `)([^`]+)(`)",
+            rf'\g<1>{pavia_text}\g<3>',
+            html,
+        )
+
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(html)
+
+
+def update_partnership_trending(path):
+    """Recalculate trending field for each partnership based on W/L ratio."""
+    with open(path, "r", encoding="utf-8") as f:
+        html = f.read()
+
+    def trending_from_record(w, l):
+        total = w + l
+        if total == 0:
+            return "neutral"
+        pct = w / total
+        if pct >= 0.65:
+            return "up"
+        elif pct <= 0.40:
+            return "down"
+        return "stable"
+
+    # Find each partnership object and update its trending field
+    def replace_trending(m):
+        w = int(m.group(1))
+        l = int(m.group(2))
+        new_trend = trending_from_record(w, l)
+        # Preserve everything, just swap the trending value
+        return m.group(0).replace(
+            f'trending:"{m.group(3)}"', f'trending:"{new_trend}"'
+        )
+
+    new_html = re.sub(
+        r'\{[^}]*w:(\d+),\s*l:(\d+)[^}]*trending:"(\w+)"[^}]*\}',
+        replace_trending,
+        html,
+    )
+    changed = html != new_html
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(new_html)
+    return changed
+
+
 def update_html(path, player_id, r25, r26):
     """Replace record25 and record26 for a player in index.html."""
     with open(path, "r", encoding="utf-8") as f:
@@ -198,6 +351,7 @@ def main():
 
     updated = []
     failed = []
+    all_records = {}  # player_id → (r25, r26) for post-loop use
 
     for player_id, url in PLAYER_URLS.items():
         print(f"Fetching {player_id}...")
@@ -209,18 +363,30 @@ def main():
         records, dynamic_rating = result
         r25 = records.get("2025", (0, 0))
         r26 = records.get("2026", (0, 0))
+        all_records[player_id] = (r25, r26)
         rating_str = f"{dynamic_rating}" if dynamic_rating else "N/A"
         print(f"  Rating: {rating_str}  |  2025: {r25[0]}-{r25[1]}  |  2026: {r26[0]}-{r26[1]}")
 
-        ok = update_html(html_path, player_id, r25, r26)
+        update_html(html_path, player_id, r25, r26)
         if dynamic_rating:
             update_rating(html_path, player_id, dynamic_rating)
-        if ok:
-            updated.append(player_id)
-        else:
-            failed.append(player_id)
+        update_winpct40(html_path, player_id, r25[0], r25[1], r26[0], r26[1])
+
+        new_tags = compute_tags(player_id, r25[0], r25[1], r26[0], r26[1])
+        update_tags(html_path, player_id, new_tags)
+        updated.append(player_id)
 
         time.sleep(0.5)  # be polite to the server
+
+    # Update singles reasoning text for Burner using her fresh records
+    if "burner" in all_records:
+        r25b, r26b = all_records["burner"]
+        update_singles_reasoning(html_path, r25b[0], r25b[1], r26b[0], r26b[1])
+        print("Updated singles reasoning (Burner/Pavia)")
+
+    # Refresh partnership trending from W/L ratios
+    update_partnership_trending(html_path)
+    print("Updated partnership trending")
 
     print()
     print(f"Updated: {len(updated)} players")
@@ -228,7 +394,7 @@ def main():
         print(f"Failed:  {', '.join(failed)}")
 
     from datetime import date
-    msg = f"Auto-update USTA records {date.today()} ({len(updated)} players)"
+    msg = f"Auto-update records, ratings, highlights & partnerships {date.today()} ({len(updated)} players)"
     git_push(repo, msg)
 
 
