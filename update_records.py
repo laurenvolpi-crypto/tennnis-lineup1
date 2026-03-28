@@ -106,30 +106,41 @@ def update_html(path, player_id, r25, r26):
     with open(path, "r", encoding="utf-8") as f:
         html = f.read()
 
-    # Pattern matches the player block's record25/record26 values
-    # We find the player's data block first, then replace within it
-    block_pattern = re.compile(
-        r'(\{\s*id:"' + re.escape(player_id) + r'".*?record25:\{)(w:\d+,l:\d+,note:"[^"]*"\})'
-        r'(,\s*record26:\{)(w:\d+,l:\d+,note:"[^"]*"\})',
-        re.DOTALL,
-    )
+    # Pattern matches only the w/l values inside record25 and record26 for this player.
+    # We scope to this player's block first to avoid cross-player matches.
+    block_start = re.search(r'id:"' + re.escape(player_id) + r'"', html)
+    if not block_start:
+        print(f"  WARNING: player id '{player_id}' not found in HTML")
+        return False
+
+    # Find the next player block boundary so we only edit within this player's object
+    next_player = re.search(r'id:"\w+"', html[block_start.end():])
+    block_end = block_start.end() + next_player.start() if next_player else len(html)
+    segment = html[block_start.start():block_end]
 
     w25, l25 = r25
     w26, l26 = r26
     note25 = "W 3.5+4.0"
     note26 = "W 3.5+4.0" if w26 + l26 > 0 else "No 2026 matches yet"
 
-    replacement = (
-        r'\g<1>'
-        f'w:{w25},l:{l25},note:"{note25}"'
-        r'\g<3>'
-        f'w:{w26},l:{l26},note:"{note26}"'
+    # Replace record25 values
+    segment = re.sub(
+        r'(record25:\{)w:\d+,l:\d+,note:"[^"]*"(\})',
+        rf'\g<1>w:{w25},l:{l25},note:"{note25}"\2',
+        segment,
+    )
+    # Replace record26 values
+    segment = re.sub(
+        r'(record26:\{)w:\d+,l:\d+,note:"[^"]*"(\})',
+        rf'\g<1>w:{w26},l:{l26},note:"{note26}"\2',
+        segment,
     )
 
-    new_html, count = block_pattern.subn(replacement, html)
-    if count == 0:
-        print(f"  WARNING: pattern not matched for {player_id}")
-        return False
+    new_html = html[:block_start.start()] + segment + html[block_end:]
+    count = 1  # signal success
+    block_pattern = None  # not used below
+
+    replacement = None  # not used below
 
     with open(path, "w", encoding="utf-8") as f:
         f.write(new_html)
