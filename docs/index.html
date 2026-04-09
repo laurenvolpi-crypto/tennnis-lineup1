@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Rafael RC — Documentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1A2E;--navy-mid:#152238;--navy-light:#1E2D45;
+  --gold:#C8A951;--gold-light:#D4B96A;--gold-dim:rgba(200,169,81,.15);
+  --white:#FFFFFF;--off-white:#F4F5F7;--light-gray:#E5E7EB;
+  --green:#34D399;--green-bg:rgba(52,211,153,.12);
+  --amber:#FBBF24;--amber-bg:rgba(251,191,36,.12);
+  --red:#F87171;--red-bg:rgba(248,113,113,.12);
+  --text:#1A1A2E;--text-sec:#6B7280;--text-light:#9CA3AF;
+  --radius:12px;--radius-sm:8px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.04);
+  --shadow-lg:0 4px 20px rgba(0,0,0,.12);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--text);min-height:100vh}
+
+/* HEADER */
+.header{background:var(--navy);padding:0 20px;height:58px;display:flex;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.header-inner{max-width:1100px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--navy);flex-shrink:0}
+.logo h1{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--white)}
+.logo h1 span{color:var(--gold)}
+.back-btn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;border:1.5px solid var(--gold);background:var(--gold-dim);color:var(--gold);text-decoration:none;transition:all .15s;white-space:nowrap}
+.back-btn:hover{background:var(--gold);color:var(--navy)}
+
+/* LAYOUT */
+.docs-layout{max-width:1100px;margin:0 auto;padding:28px 16px 48px;display:grid;grid-template-columns:220px 1fr;gap:28px;align-items:start}
+
+/* SIDEBAR */
+.sidebar{position:sticky;top:74px;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:8px 0;overflow:hidden}
+.sidebar-title{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;color:var(--text-light);padding:10px 20px 6px;text-transform:uppercase}
+.sidebar ul{list-style:none}
+.sidebar li a{display:block;padding:8px 20px;font-size:13px;font-weight:500;color:var(--text-sec);text-decoration:none;border-left:3px solid transparent;transition:all .12s}
+.sidebar li a:hover{color:var(--navy);border-left-color:var(--light-gray);background:var(--off-white)}
+.sidebar li a.active{color:var(--gold);border-left-color:var(--gold);background:var(--gold-dim);font-weight:600}
+
+/* MOBILE TOC */
+.mobile-toc{display:none;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:0;margin-bottom:20px;overflow:hidden}
+.mobile-toc summary{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--navy);cursor:pointer;padding:14px 18px;list-style:none;display:flex;align-items:center;justify-content:space-between}
+.mobile-toc summary::after{content:'▾';font-size:12px;color:var(--text-light)}
+.mobile-toc[open] summary::after{content:'▴'}
+.mobile-toc ul{padding:4px 0 14px 0;list-style:none}
+.mobile-toc li a{display:block;padding:7px 20px;font-size:13px;color:var(--text-sec);text-decoration:none}
+.mobile-toc li a:hover{color:var(--gold)}
+
+/* DOCS SECTIONS */
+.docs-main{min-width:0}
+.docs-section{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 28px 32px;margin-bottom:20px;scroll-margin-top:74px}
+.docs-section h2{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1.5px;color:var(--navy);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.docs-section h2::before{content:'';width:4px;height:26px;background:var(--gold);border-radius:2px;display:inline-block;flex-shrink:0}
+.docs-section h3{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.6px;margin:22px 0 8px}
+.docs-section p{font-size:14px;line-height:1.75;color:var(--text-sec);margin-bottom:10px}
+.docs-section ul,.docs-section ol{padding-left:20px;margin-bottom:10px}
+.docs-section li{font-size:14px;line-height:1.7;color:var(--text-sec);margin-bottom:5px}
+.docs-section strong{color:var(--text);font-weight:600}
+
+/* STEP LIST */
+.step-list{list-style:none;padding:0;counter-reset:step;margin-bottom:10px}
+.step-list li{counter-increment:step;display:flex;gap:12px;align-items:flex-start;margin-bottom:12px;font-size:14px;color:var(--text-sec);line-height:1.6}
+.step-list li::before{content:counter(step);min-width:26px;height:26px;background:var(--navy);color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+
+/* LINE POSITIONS TABLE */
+.line-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:13px}
+.line-table th{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.8px;color:var(--navy);background:var(--off-white);padding:9px 14px;text-align:left;border-bottom:2px solid var(--gold)}
+.line-table td{color:var(--text-sec);padding:10px 14px;border-bottom:1px solid var(--light-gray);line-height:1.6}
+.line-table tr:last-child td{border-bottom:none}
+.line-pill{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--navy);background:var(--gold-dim);padding:2px 9px;border-radius:6px;display:inline-block}
+
+/* BADGES */
+.badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.4px;display:inline-block;margin-right:4px}
+.badge-hot{background:var(--green-bg);color:#059669}
+.badge-imp{background:var(--amber-bg);color:#D97706}
+.badge-caut{background:var(--red-bg);color:#DC2626}
+.badge-cpt{background:var(--gold-dim);color:var(--gold)}
+
+/* INFO CARD */
+.info-card{background:var(--gold-dim);border-left:3px solid var(--gold);border-radius:var(--radius-sm);padding:12px 16px;margin:14px 0;font-size:13px;color:var(--text-sec);line-height:1.65}
+.info-card strong{color:var(--navy)}
+
+/* TWO-COL FIELDS */
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.field-item{background:var(--off-white);border-radius:var(--radius-sm);padding:10px 14px}
+.field-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-light);margin-bottom:3px}
+.field-desc{font-size:13px;color:var(--text-sec)}
+.field-required .field-label::after{content:' *';color:var(--gold)}
+
+/* FOOTER */
+.footer{text-align:center;padding:30px 20px;font-size:11px;color:var(--text-light)}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .docs-layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .mobile-toc{display:block}
+  .docs-section{padding:20px 18px 24px}
+  .field-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">R</div>
+      <h1>RAFAEL <span>RC</span> &nbsp;DOCS</h1>
+    </div>
+    <a class="back-btn" href="https://laurenvolpi-crypto.github.io/tennnis-lineup1/">← Back to App</a>
+  </div>
+</div>
+
+<div class="docs-layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-title">Contents</div>
+    <ul>
+      <li><a href="#introduction">Introduction</a></li>
+      <li><a href="#quick-start">Quick Start</a></li>
+      <li><a href="#adding-players">Adding Players</a></li>
+      <li><a href="#partnerships">Partnerships</a></li>
+      <li><a href="#generating-lineup">Generating a Lineup</a></li>
+      <li><a href="#line-positions">Line Positions</a></li>
+      <li><a href="#opponent-scouting">Opponent Scouting</a></li>
+      <li><a href="#player-ratings">Player Ratings</a></li>
+    </ul>
+  </nav>
+
+  <main class="docs-main">
+
+    <!-- MOBILE TOC -->
+    <details class="mobile-toc">
+      <summary>Contents</summary>
+      <ul>
+        <li><a href="#introduction">Introduction</a></li>
+        <li><a href="#quick-start">Quick Start</a></li>
+        <li><a href="#adding-players">Adding Players</a></li>
+        <li><a href="#partnerships">Partnerships</a></li>
+        <li><a href="#generating-lineup">Generating a Lineup</a></li>
+        <li><a href="#line-positions">Line Positions</a></li>
+        <li><a href="#opponent-scouting">Opponent Scouting</a></li>
+        <li><a href="#player-ratings">Player Ratings</a></li>
+      </ul>
+    </details>
+
+    <!-- INTRODUCTION -->
+    <section class="docs-section" id="introduction">
+      <h2>Introduction</h2>
+      <p>Tennis Lineup is a web app for USTA team captains to manage rosters and generate optimal match lineups. No installation required — it runs entirely in your browser and saves your roster locally.</p>
+      <h3>Key Features</h3>
+      <ul>
+        <li>Roster management with manual entry or TennisRecord import</li>
+        <li>Player profiles with status badges (Hot, Improving, Caution, CPT)</li>
+        <li>Partnership tracking for doubles pairs with win/loss history</li>
+        <li>Automated lineup generation across 5 positions (S1, S2, D1, D2, D3)</li>
+      </ul>
+      <div class="info-card"><strong>Designed for:</strong> USTA Women's 4.0 teams. The optimizer uses dynamic ratings, court side preferences, and partnership records to build the strongest possible lineup for each match.</div>
+    </section>
+
+    <!-- QUICK START -->
+    <section class="docs-section" id="quick-start">
+      <h2>Quick Start</h2>
+      <p>Get your first lineup in under two minutes:</p>
+      <ol class="step-list">
+        <li>Open the app in any browser — no login or installation needed.</li>
+        <li>Click <strong>+ Add Player</strong> to create player profiles with name, dynamic rating, court side preference, and match type.</li>
+        <li>Build out your full roster (the app comes pre-loaded with a base roster you can customize).</li>
+        <li>Check the boxes for players who are <strong>available</strong> for the upcoming match. A minimum of 8 is recommended for a complete lineup.</li>
+        <li>Enter opponent details in Step 2 — use Full Scouting for rated matchup analysis, or Quick Mode to skip opponent info.</li>
+        <li>Tap <strong>Generate Optimal Lineup</strong> and review the result.</li>
+      </ol>
+    </section>
+
+    <!-- ADDING PLAYERS -->
+    <section class="docs-section" id="adding-players">
+      <h2>Adding Players</h2>
+      <p>Click <strong>+ Add Player</strong> in the roster section to open the add panel. There are two ways to create a player profile:</p>
+
+      <h3>Method 1 — Name or TennisRecord Lookup</h3>
+      <p>Type a player's name (e.g. <em>Jane Smith</em>) or paste their full TennisRecord URL into the lookup field, then click <strong>Lookup</strong>. The app will auto-fill the player's name and current dynamic rating from TennisRecord.</p>
+
+      <h3>Method 2 — Manual Entry</h3>
+      <p>Fill in the fields directly:</p>
+      <div class="field-grid">
+        <div class="field-item field-required"><div class="field-label">First Name</div><div class="field-desc">Player's first name</div></div>
+        <div class="field-item field-required"><div class="field-label">Last Name</div><div class="field-desc">Player's last name</div></div>
+        <div class="field-item field-required"><div class="field-label">Dynamic Rating</div><div class="field-desc">Current USTA dynamic rating (e.g. 3.72)</div></div>
+        <div class="field-item field-required"><div class="field-label">Court Side</div><div class="field-desc">Ad, Deuce, or Flexible</div></div>
+        <div class="field-item field-required"><div class="field-label">Primary Line</div><div class="field-desc">Singles, Doubles, or Both</div></div>
+        <div class="field-item"><div class="field-label">4.0 Win %</div><div class="field-desc">Estimated win rate at 4.0 level</div></div>
+        <div class="field-item"><div class="field-label">2026 Wins</div><div class="field-desc">Season wins to date</div></div>
+        <div class="field-item"><div class="field-label">2026 Losses</div><div class="field-desc">Season losses to date</div></div>
+      </div>
+      <p style="font-size:12px;color:var(--text-light);margin-top:4px">* Required fields</p>
+
+      <h3>Managing Availability</h3>
+      <p>Use <strong>Select All</strong> and <strong>Clear</strong> to quickly toggle the full roster. Individual players can be checked or unchecked by tapping their card.</p>
+    </section>
+
+    <!-- PARTNERSHIPS -->
+    <section class="docs-section" id="partnerships">
+      <h2>Partnerships</h2>
+      <p>Tracking doubles pairings improves lineup accuracy. Click <strong>Partnerships</strong> to record who plays well together.</p>
+      <ol class="step-list">
+        <li>Select <strong>Player A</strong> from the dropdown.</li>
+        <li>Select <strong>Player B</strong> from the dropdown.</li>
+        <li>Enter <strong>Wins Together</strong> and <strong>Losses Together</strong>.</li>
+        <li>Set the <strong>Trend</strong>: Trending Up, Stable, or Trending Down.</li>
+        <li>Add optional <strong>Notes</strong> (chemistry, scheduling, injury history).</li>
+        <li>Click <strong>Save Partnership</strong>.</li>
+      </ol>
+      <h3>How Trends Affect the Lineup</h3>
+      <ul>
+        <li><strong>Trending Up</strong> — pair gets priority placement in higher doubles slots (D1, D2)</li>
+        <li><strong>Stable</strong> — placed based on combined rating and win percentage</li>
+        <li><strong>Trending Down</strong> — the optimizer may suggest splitting the pair</li>
+      </ul>
+      <div class="info-card"><strong>Tip:</strong> Undefeated partnerships are flagged with a green checkmark in the results. The optimizer will protect these pairs unless availability forces a change.</div>
+    </section>
+
+    <!-- GENERATING A LINEUP -->
+    <section class="docs-section" id="generating-lineup">
+      <h2>Generating a Lineup</h2>
+      <ol class="step-list">
+        <li>Mark which players are <strong>available</strong> for the match (Step 1 on the main page).</li>
+        <li>Enter opponent information in <strong>Step 2</strong> — or switch to Quick Mode to skip this.</li>
+        <li>Tap <strong>Generate Optimal Lineup</strong>.</li>
+        <li>Review the recommended lineup, matchup analysis, and confidence ratings. Scroll down for alternative lineups.</li>
+      </ol>
+      <h3>What the Algorithm Considers</h3>
+      <ul>
+        <li>Dynamic ratings and 4.0 win percentages</li>
+        <li>Court side preferences (Ad / Deuce / Flexible)</li>
+        <li>Primary line designation (Singles-only, Doubles-only, Both)</li>
+        <li>Doubles partnership records and trend status</li>
+        <li>Opponent ratings (in Full Scouting mode)</li>
+      </ul>
+      <h3>Quick Mode</h3>
+      <p>If you don't have opponent information, toggle <strong>Quick (No Opponent Info)</strong> at the top of Step 2. The optimizer will build the strongest internal lineup without opponent matchup analysis.</p>
+      <div class="info-card"><strong>Minimum requirement:</strong> 8 available players for a complete lineup (2 singles players + 3 doubles pairs).</div>
+    </section>
+
+    <!-- LINE POSITIONS -->
+    <section class="docs-section" id="line-positions">
+      <h2>Line Positions</h2>
+      <p>Each match has 5 lines — 2 singles and 3 doubles pairs. The optimizer assigns players to lines based on strength, court side, and availability.</p>
+
+      <table class="line-table">
+        <thead>
+          <tr><th>Line</th><th>Type</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="line-pill">S1</span></td><td>Singles 1</td><td>Your strongest singles player, placed against the opponent's top singles player.</td></tr>
+          <tr><td><span class="line-pill">S2</span></td><td>Singles 2</td><td>Second-ranked singles competitor.</td></tr>
+          <tr><td><span class="line-pill">D1</span></td><td>Doubles 1</td><td>Your top doubles pair, matched against the opponent's strongest doubles team.</td></tr>
+          <tr><td><span class="line-pill">D2</span></td><td>Doubles 2</td><td>Mid-tier partnership.</td></tr>
+          <tr><td><span class="line-pill">D3</span></td><td>Doubles 3</td><td>Strategic placement — often used to secure a win with a favorable matchup.</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Court Sides</h3>
+      <ul>
+        <li><strong>Ad</strong> — left court (advantage side)</li>
+        <li><strong>Deuce</strong> — right court</li>
+        <li><strong>Flexible</strong> — can play either side; the optimizer places them where they're most useful</li>
+      </ul>
+
+      <h3>Line Preference</h3>
+      <p>A player's Primary Line setting restricts which positions they're eligible for. A <strong>Singles-only</strong> player will never be placed in doubles, and a <strong>Doubles-only</strong> player will never be placed in singles. Players set to <strong>Both</strong> can fill any slot.</p>
+    </section>
+
+    <!-- OPPONENT SCOUTING -->
+    <section class="docs-section" id="opponent-scouting">
+      <h2>Opponent Scouting</h2>
+      <p>Step 2 lets you enter the opposing team's lineup. The more information you provide, the more precise the matchup analysis.</p>
+
+      <h3>Full Scouting Mode</h3>
+      <p>Enter names and ratings for all 8 opponent positions (S1, S2, D1–D3). For each player you can:</p>
+      <ul>
+        <li>Type their name and click <strong>🔍</strong> to auto-fetch their dynamic rating from TennisRecord</li>
+        <li>Click <strong>🔗</strong> to manually enter a TennisRecord profile URL</li>
+        <li>Enter the rating directly in the rating field</li>
+      </ul>
+
+      <h3>Quick Mode</h3>
+      <p>Toggle <strong>Quick (No Opponent Info)</strong> at the top of Step 2 to skip scouting and generate a lineup based only on your team's ratings and partnerships.</p>
+
+      <h3>Paste Opponent Roster</h3>
+      <p>Click <strong>Paste Opponent Roster</strong> to bulk-fill the lineup from copied text. Supported formats:</p>
+      <ul>
+        <li><code>S1: Jane Smith 3.75</code> — name + rating with position label</li>
+        <li><code>D1: Alice Brown 3.68 / Eve Wilson 3.65</code> — doubles pair</li>
+        <li>Raw TennisRecord URLs (ratings fetched automatically)</li>
+      </ul>
+      <div class="info-card"><strong>Name Lookup:</strong> Type any opponent's name in a name field, then click the 🔍 button to instantly look up their current dynamic rating on TennisRecord — no URL needed.</div>
+    </section>
+
+    <!-- PLAYER RATINGS -->
+    <section class="docs-section" id="player-ratings">
+      <h2>Player Ratings</h2>
+      <p>The app uses USTA dynamic ratings — a continuously updated decimal number that reflects recent match performance.</p>
+
+      <h3>Rating Scale (4.0 Level)</h3>
+      <ul>
+        <li><strong>3.85 – 4.00</strong> — top of the 4.0 tier, near bump territory</li>
+        <li><strong>3.65 – 3.84</strong> — solidly mid-4.0</li>
+        <li><strong>3.50 – 3.64</strong> — lower 4.0, may be coming up from 3.5</li>
+      </ul>
+
+      <h3>Status Badges</h3>
+      <p>Each player card shows a status badge based on recent trends:</p>
+      <p>
+        <span class="badge badge-hot">Hot</span> Winning streak — performing above their rating<br><br>
+        <span class="badge badge-imp">Improving</span> Upward trend — rating is rising<br><br>
+        <span class="badge badge-caut">Caution</span> Recent losses — may be fatigued or underperforming<br><br>
+        <span class="badge badge-cpt">CPT</span> Team captain
+      </p>
+
+      <h3>How Ratings Are Used</h3>
+      <p>The optimizer combines the dynamic rating with a player's <strong>4.0 Win %</strong> (how often they win against 4.0-level opponents) to rank players for each position. In Full Scouting mode, individual matchup edges are calculated and shown in the results.</p>
+
+      <h3>Updating Ratings</h3>
+      <p>To update a player's rating, open their card and edit the Dynamic Rating field, or use the TennisRecord lookup in the Add Player panel to re-fetch the latest value.</p>
+    </section>
+
+  </main>
+</div>
+
+<div class="footer">Rafael RC Lineup Optimizer &middot; Documentation &middot; <a href="https://laurenvolpi-crypto.github.io/tennnis-lineup1/" style="color:var(--gold);text-decoration:none">Back to App</a></div>
+
+<script>
+  const sections = document.querySelectorAll('.docs-section');
+  const links = document.querySelectorAll('.sidebar a');
+  if (sections.length && links.length) {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          links.forEach(l => l.classList.remove('active'));
+          const active = document.querySelector(`.sidebar a[href="#${e.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-10% 0px -75% 0px' });
+    sections.forEach(s => observer.observe(s));
+  }
+</script>
+</body>
+</html>
