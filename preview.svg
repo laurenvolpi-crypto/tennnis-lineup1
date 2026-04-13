@@ -78,8 +78,12 @@
   <rect x="714" y="388" width="190" height="36" rx="18" fill="rgba(200,169,81,0.15)" stroke="rgba(200,169,81,0.4)" stroke-width="1"/>
   <text x="809" y="412" font-family="Arial, sans-serif" font-size="15" fill="#C8A951" text-anchor="middle">&#128200; Confidence Scores</text>
 
+  <!-- CTA -->
+  <text x="600" y="490" font-family="Arial, sans-serif" font-size="22" fill="rgba(255,255,255,0.9)" text-anchor="middle">Build a competitive lineup that gives your team the highest</text>
+  <text x="600" y="520" font-family="Arial, sans-serif" font-size="22" fill="rgba(255,255,255,0.9)" text-anchor="middle">confidence of winning your next USTA match.</text>
+
   <!-- Bottom domain -->
-  <text x="600" y="560" font-family="Arial, sans-serif" font-size="22" fill="rgba(255,255,255,0.4)" text-anchor="middle" letter-spacing="2">rrc.tennislineup.ai</text>
+  <text x="600" y="575" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.35)" text-anchor="middle" letter-spacing="2">rrc.tennislineup.ai</text>
 
   <!-- Bottom gold line accent -->
   <rect x="0" y="610" width="1200" height="4" fill="#C8A951" opacity="0.6"/>
