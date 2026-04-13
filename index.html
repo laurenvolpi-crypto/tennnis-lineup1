@@ -439,6 +439,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--te
       <div class="step-title">OPPONENT LINEUP</div>
     </div>
 
+    <div class="mode-toggle" style="margin-bottom:8px">
+      <button class="mode-btn active" onclick="setFormat('standard')" id="fmtStandard">2 Singles + 3 Doubles</button>
+      <button class="mode-btn" onclick="setFormat('short')" id="fmtShort">1 Singles + 2 Doubles</button>
+    </div>
+
     <div class="mode-toggle">
       <button class="mode-btn active" onclick="setMode('full')" id="modeFull">Full Scouting</button>
       <button class="mode-btn" onclick="setMode('quick')" id="modeQuick">Quick (No Opponent Info)</button>
@@ -478,6 +483,7 @@ D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
           <input class="opp-url-input" id="opp_s1_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('s1')">
         </div>
       </div>
+      <div id="oppS2Section">
       <div class="opp-divider"></div>
       <div class="opp-section">
         <div class="opp-section-title"><span class="line-badge">S2</span> Singles 2</div>
@@ -491,6 +497,7 @@ D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
           <span style="width:44px;flex-shrink:0"></span>
           <input class="opp-url-input" id="opp_s2_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('s2')">
         </div>
+      </div>
       </div>
       <div class="opp-divider"></div>
       <div class="opp-section">
@@ -540,6 +547,7 @@ D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
           <input class="opp-url-input" id="opp_d2_p2_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d2_p2')">
         </div>
       </div>
+      <div id="oppD3Section">
       <div class="opp-divider"></div>
       <div class="opp-section">
         <div class="opp-section-title"><span class="line-badge">D3</span> Doubles 3</div>
@@ -563,6 +571,7 @@ D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
           <span style="width:44px;flex-shrink:0"></span>
           <input class="opp-url-input" id="opp_d3_p2_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d3_p2')">
         </div>
+      </div>
       </div>
     </div>
   </div>
@@ -757,6 +766,7 @@ let ROSTER = loadRoster();
 // ===================== STATE =====================
 let available = new Set(ROSTER.map(p => p.id));
 let mode = "full";
+let format = "standard"; // "standard" = 2S+3D, "short" = 1S+2D
 
 // ===================== UI INIT =====================
 function init() {
@@ -1127,12 +1137,13 @@ function openPlayerModal(id, event) {
 }
 
 function updateCount() {
-  const n = available.size;
-  const el = document.getElementById('playerCount');
-  const sufficient = n >= 8;
-  el.className = 'player-count' + (sufficient ? '' : ' insufficient');
-  el.innerHTML = `<strong>${n}</strong> players available` + (sufficient ? ' — ready to generate' : ' — need at least 8');
-  document.getElementById('generateBtn').disabled = n < 8;
+  const n   = available.size;
+  const min = format === 'short' ? 5 : 8;
+  const el  = document.getElementById('playerCount');
+  const ok  = n >= min;
+  el.className = 'player-count' + (ok ? '' : ' insufficient');
+  el.innerHTML = `<strong>${n}</strong> players available` + (ok ? ' — ready to generate' : ` — need at least ${min}`);
+  document.getElementById('generateBtn').disabled = n < min;
 }
 
 function setMode(m) {
@@ -1140,6 +1151,19 @@ function setMode(m) {
   document.getElementById('modeFull').classList.toggle('active', m === 'full');
   document.getElementById('modeQuick').classList.toggle('active', m === 'quick');
   document.getElementById('oppForm').style.display = m === 'full' ? 'block' : 'none';
+}
+
+function setFormat(f) {
+  format = f;
+  document.getElementById('fmtStandard').classList.toggle('active', f === 'standard');
+  document.getElementById('fmtShort').classList.toggle('active', f === 'short');
+  const hide = f === 'short';
+  document.getElementById('oppS2Section').style.display = hide ? 'none' : 'block';
+  document.getElementById('oppD3Section').style.display = hide ? 'none' : 'block';
+  updateCount();
+  const results = document.getElementById('results');
+  results.classList.remove('visible');
+  results.innerHTML = '';
 }
 
 // ===================== ALGORITHM =====================
@@ -1237,6 +1261,11 @@ function permute3(arr) {
   ];
 }
 
+function permute2(arr) {
+  // Both permutations of a 2-element array (for assigning teams to D1/D2)
+  return [[arr[0],arr[1]], [arr[1],arr[0]]];
+}
+
 function toggleOppUrl(key, event) {
   event.stopPropagation();
   const row = document.getElementById('opp_'+key+'_url_row');
@@ -1275,8 +1304,52 @@ function getOpponentData() {
 
 function optimize() {
   const avail = ROSTER.filter(p => available.has(p.id));
-  if (avail.length < 8) return;
+  const min = format === 'short' ? 5 : 8;
+  if (avail.length < min) return;
   const opp = getOpponentData();
+
+  if (format === 'short') {
+    // 1 Singles + 2 Doubles
+    const oppD = [
+      (opp.d1.p1.rating + opp.d1.p2.rating)/2,
+      (opp.d2.p1.rating + opp.d2.p2.rating)/2,
+    ];
+    const sCandidates = avail.filter(p => p.singlesCapable).sort((a,b) => b.singlesScore - a.singlesScore);
+    let allLineups = [];
+    for (let si = 0; si < Math.min(sCandidates.length, 5); si++) {
+      const s1player = sCandidates[si];
+      const doublesPool = avail.filter(p => p.id !== s1player.id)
+        .sort((a, b) => (b.rating * (0.5 + b.winPct40)) - (a.rating * (0.5 + a.winPct40)))
+        .slice(0, 10)
+        .map(p => p.id);
+      if (doublesPool.length < 4) continue;
+      const combos4 = doublesPool.length === 4 ? [doublesPool] : combinations(doublesPool, 4);
+      for (const group of combos4) {
+        const pairings = generatePairings(group);
+        for (const teams of pairings) {
+          const perms = permute2(teams);
+          for (const perm of perms) {
+            const s1score = scoreSingles(s1player.id, opp.s1.rating);
+            const d1score = scoreDoublesVsOpp(perm[0][0], perm[0][1], oppD[0]);
+            const d2score = scoreDoublesVsOpp(perm[1][0], perm[1][1], oppD[1]);
+            const total = s1score + d1score + d2score;
+            allLineups.push({
+              s1: s1player.id,
+              d1: perm[0], d2: perm[1],
+              scores: { s1:s1score, d1:d1score, d2:d2score },
+              total
+            });
+          }
+        }
+      }
+    }
+    allLineups.sort((a,b) => b.total - a.total);
+    if (allLineups.length === 0) return;
+    renderResults(allLineups.slice(0, 5), opp);
+    return;
+  }
+
+  // Standard format: 2 Singles + 3 Doubles
   const oppD = [
     (opp.d1.p1.rating + opp.d1.p2.rating)/2,
     (opp.d2.p1.rating + opp.d2.p2.rating)/2,
@@ -1294,12 +1367,10 @@ function optimize() {
       const s1player = sCandidates[si];
       const s2player = sCandidates[sj];
       // Remaining for doubles — cap at top 12 by rating×winPct to keep combinations fast
-      const doublesPoolFull = avail.filter(p => p.id !== s1player.id && p.id !== s2player.id);
-      const doublesPoolCapped = doublesPoolFull
+      const doublesPool = avail.filter(p => p.id !== s1player.id && p.id !== s2player.id)
         .sort((a, b) => (b.rating * (0.5 + b.winPct40)) - (a.rating * (0.5 + a.winPct40)))
         .slice(0, 12)
         .map(p => p.id);
-      const doublesPool = doublesPoolCapped;
       if (doublesPool.length < 6) continue;
 
       // Choose 6 from pool (if > 6)
@@ -1370,12 +1441,12 @@ function renderResults(lineups, opp) {
 
   // Singles lines
   html += renderSinglesCard('S1', best.s1, opp.s1, best.scores.s1);
-  html += renderSinglesCard('S2', best.s2, opp.s2, best.scores.s2);
+  if (format === 'standard') html += renderSinglesCard('S2', best.s2, opp.s2, best.scores.s2);
 
   // Doubles lines
   html += renderDoublesCard('D1', best.d1, opp.d1, best.scores.d1);
   html += renderDoublesCard('D2', best.d2, opp.d2, best.scores.d2);
-  html += renderDoublesCard('D3', best.d3, opp.d3, best.scores.d3);
+  if (format === 'standard') html += renderDoublesCard('D3', best.d3, opp.d3, best.scores.d3);
 
   // Warnings
   html += renderWarnings(best);
@@ -1388,16 +1459,16 @@ function renderResults(lineups, opp) {
       const p = id => ROSTER.find(r => r.id === id);
       const pairStr = (ids) => `${p(ids[0]).name.split(' ')[1]} + ${p(ids[1]).name.split(' ')[1]}`;
       const scoreDiff = Math.round(best.total - alt.total);
+      const altLines = format === 'short'
+        ? `S1: ${p(alt.s1).name}<br>D1: ${pairStr(alt.d1)} &middot; D2: ${pairStr(alt.d2)}`
+        : `S1: ${p(alt.s1).name} &middot; S2: ${p(alt.s2).name}<br>D1: ${pairStr(alt.d1)} &middot; D2: ${pairStr(alt.d2)} &middot; D3: ${pairStr(alt.d3)}`;
       html += `
         <div class="alt-card" onclick="showAlt(${i})">
           <div class="alt-card-top">
             <div class="alt-rank">Option ${i+1}</div>
             <div class="alt-score">${scoreDiff > 0 ? '-' + scoreDiff + ' pts' : 'Same'}</div>
           </div>
-          <div class="alt-lines">
-            S1: ${p(alt.s1).name} &middot; S2: ${p(alt.s2).name}<br>
-            D1: ${pairStr(alt.d1)} &middot; D2: ${pairStr(alt.d2)} &middot; D3: ${pairStr(alt.d3)}
-          </div>
+          <div class="alt-lines">${altLines}</div>
         </div>`;
     }
     html += `</div>`;
