@@ -328,8 +328,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--te
     <div class="select-controls">
       <button class="select-btn" onclick="selectAll()">Select All</button>
       <button class="select-btn" onclick="selectNone()">Clear</button>
+      <button class="select-btn" onclick="toggleAvailPanel()" id="pasteAvailBtn">Paste Available</button>
+      <button class="select-btn" onclick="copyAvailable()" id="copyAvailBtn">Copy Available</button>
       <button class="add-player-btn" onclick="toggleAddPanel()">+ Add Player</button>
       <button class="pship-btn" onclick="togglePshipPanel()">Partnerships</button>
+    </div>
+
+    <div class="paste-panel" id="availPanel">
+      <div class="pship-panel-title">PASTE AVAILABLE PLAYERS</div>
+      <textarea class="paste-textarea" id="availText" placeholder="Paste player names, one per line:
+
+Jane Smith
+Mary Jones
+Sarah Lee
+
+Names will be matched against your roster." style="min-height:100px"></textarea>
+      <div class="paste-hint">Paste first names, last names, or full names — one per line. Matched players will be marked available (all others cleared).</div>
+      <div class="paste-actions">
+        <button class="paste-btn-cancel" onclick="toggleAvailPanel()">Cancel</button>
+        <button class="paste-btn-fill" onclick="fillFromAvail()">Set Availability</button>
+      </div>
     </div>
 
     <div class="add-panel" id="addPanel">
@@ -1001,6 +1019,70 @@ function togglePlayer(id, row) {
 
 function selectAll() { ROSTER.forEach(p => available.add(p.id)); renderRoster(); updateCount(); }
 function selectNone() { available.clear(); renderRoster(); updateCount(); }
+
+function toggleAvailPanel() {
+  const panel = document.getElementById('availPanel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) document.getElementById('availText').focus();
+}
+
+function fillFromAvail() {
+  const text = document.getElementById('availText').value.trim();
+  if (!text) return;
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  available.clear();
+  let matched = 0;
+  const unmatched = [];
+  for (const line of lines) {
+    const norm = line.toLowerCase().replace(/[^a-z\s]/g, '');
+    const words = norm.split(/\s+/).filter(w => w.length >= 2);
+    const found = ROSTER.find(p => {
+      const full = p.name.toLowerCase();
+      if (full === norm) return true;
+      const parts = full.split(' ');
+      const last = parts[parts.length - 1];
+      const first = parts[0];
+      return words.includes(last) || (first.length >= 3 && words.includes(first));
+    });
+    if (found) { available.add(found.id); matched++; }
+    else unmatched.push(line);
+  }
+  renderRoster();
+  updateCount();
+  toggleAvailPanel();
+  document.getElementById('availText').value = '';
+  const msg = matched + ' player' + (matched !== 1 ? 's' : '') + ' matched' +
+    (unmatched.length ? '. Not found: ' + unmatched.join(', ') : '.');
+  showAvailToast(msg, unmatched.length > 0);
+}
+
+function copyAvailable() {
+  const names = ROSTER.filter(p => available.has(p.id)).map(p => p.name).join('\n');
+  if (!names) return;
+  navigator.clipboard.writeText(names).then(() => {
+    const btn = document.getElementById('copyAvailBtn');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+  });
+}
+
+function showAvailToast(msg, warn) {
+  let t = document.getElementById('availToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'availToast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:var(--white);font-size:13px;font-weight:500;padding:10px 18px;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:9999;transition:opacity .3s;white-space:nowrap;max-width:90vw;text-align:center';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.borderLeft = warn ? '3px solid var(--amber)' : '3px solid var(--green)';
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 3500);
+}
 
 function closePModal(event) {
   if (event.target === document.getElementById('pmodalOverlay')) {
