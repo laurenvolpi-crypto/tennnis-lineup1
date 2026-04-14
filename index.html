@@ -1376,6 +1376,17 @@ function isAvoided(id1, id2) {
   return null;
 }
 
+function lineAdjWinPct(player) {
+  // Normalize a player's raw win% by the typical opponent strength at their line.
+  // Higher-rated players play Line 1 and face tougher opponents, deflating their raw win%.
+  // Lower-rated players play Line 3 against easier opponents, inflating their raw win%.
+  // Adjustment: for every 0.10 rating above the team average, add ~7.5% to win%.
+  const raw = player.winPct40 || 0;
+  const teamAvg = ROSTER.reduce((s, p) => s + p.rating, 0) / ROSTER.length;
+  const adj = (player.rating - teamAvg) * 0.75;
+  return Math.min(0.95, Math.max(0.05, raw + adj));
+}
+
 function scorePartnership(id1, id2) {
   const p = getPartnership(id1, id2);
   const avoid = isAvoided(id1, id2);
@@ -1398,8 +1409,8 @@ function scorePartnership(id1, id2) {
   else if (sides[0] === sides[1]) score -= 5;
   // Combined rating
   score += ((p1.rating + p2.rating) / 2 - 3.5) * 30;
-  // Win pct bonus
-  score += ((p1.winPct40 + p2.winPct40) / 2) * 20;
+  // Line-adjusted win% bonus (normalizes for opponent strength at each line)
+  score += ((lineAdjWinPct(p1) + lineAdjWinPct(p2)) / 2) * 20;
   // Pavia penalty
   if (id1 === 'pavia' || id2 === 'pavia') score -= 60;
   return score;
@@ -1409,7 +1420,8 @@ function scoreSingles(playerId, oppRating, oppAdultWinPct) {
   const p = ROSTER.find(r => r.id === playerId);
   let score = p.singlesScore;
   if (oppRating) score += (p.rating - oppRating) * 40;
-  score += p.winPct40 * 15;
+  // Line-adjusted win% (normalizes for opponent strength at each line)
+  score += lineAdjWinPct(p) * 15;
   // Quality-of-competition adjustment: opponent's adult-only win rate
   if (oppAdultWinPct != null) score -= (oppAdultWinPct - 0.5) * 25;
   if (p.id === 'pavia') score -= 50;
@@ -1519,7 +1531,7 @@ function optimize() {
     for (let si = 0; si < Math.min(sCandidates.length, 5); si++) {
       const s1player = sCandidates[si];
       const doublesPool = avail.filter(p => p.id !== s1player.id)
-        .sort((a, b) => (b.rating * (0.5 + b.winPct40)) - (a.rating * (0.5 + a.winPct40)))
+        .sort((a, b) => (b.rating * (0.5 + lineAdjWinPct(b))) - (a.rating * (0.5 + lineAdjWinPct(a))))
         .slice(0, 10)
         .map(p => p.id);
       if (doublesPool.length < 4) continue;
@@ -1573,7 +1585,7 @@ function optimize() {
       const s2player = sCandidates[sj];
       // Remaining for doubles — cap at top 12 by rating×winPct to keep combinations fast
       const doublesPool = avail.filter(p => p.id !== s1player.id && p.id !== s2player.id)
-        .sort((a, b) => (b.rating * (0.5 + b.winPct40)) - (a.rating * (0.5 + a.winPct40)))
+        .sort((a, b) => (b.rating * (0.5 + lineAdjWinPct(b))) - (a.rating * (0.5 + lineAdjWinPct(a))))
         .slice(0, 12)
         .map(p => p.id);
       if (doublesPool.length < 6) continue;
