@@ -334,15 +334,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--te
     </div>
 
     <div class="paste-panel" id="availPanel">
-      <div class="pship-panel-title">PASTE AVAILABLE PLAYERS</div>
-      <textarea class="paste-textarea" id="availText" placeholder="Paste player names, one per line:
+      <div class="pship-panel-title">PASTE AVAILABILITY</div>
+      <textarea class="paste-textarea" id="availText" placeholder="Paste from any source:
 
-Jane Smith
-Mary Jones
-Sarah Lee
+• Simple name list (one per line) → marks those players available
+• USTA team availability page → select all, copy, paste here
 
-Names will be matched against your roster." style="min-height:100px"></textarea>
-      <div class="paste-hint">Paste first names, last names, or full names — one per line. Matched players will be marked available (all others cleared).</div>
+USTA format auto-detected: players marked Available/Yes will be checked in, Not Available/No will be checked out." style="min-height:120px"></textarea>
+      <div class="paste-hint">Works with USTA NorCal availability pages, GroupMe/text threads, or any name list. If availability status is detected, it's applied; otherwise all matched names are marked available.</div>
       <div class="paste-actions">
         <button class="paste-btn-cancel" onclick="toggleAvailPanel()">Cancel</button>
         <button class="paste-btn-fill" onclick="fillFromAvail()">Set Availability</button>
@@ -1027,33 +1026,137 @@ function toggleAvailPanel() {
   if (panel.classList.contains('open')) document.getElementById('availText').focus();
 }
 
+function matchRosterName(namePart) {
+  // Normalize: strip non-alpha, handle "Last, First" → "First Last"
+  const norm = namePart.replace(/,\s*(\S)/g, ' $1').toLowerCase().replace(/[^a-z\s]/g, '').replace(/\s+/g, ' ').trim();
+  const words = norm.split(' ').filter(w => w.length >= 2);
+  if (!words.length) return null;
+  return ROSTER.find(p => {
+    const full = p.name.toLowerCase();
+    if (full === norm) return true;
+    const parts = full.split(' ');
+    const last  = parts[parts.length - 1];
+    const first = parts[0];
+    return words.includes(last) || (first.length >= 3 && words.includes(first));
+  }) || null;
+}
+
+function parseAvailabilityPaste(text) {
+  // Returns { entries: [{name, isAvailable}], hasStatusInfo }
+  // Handles: plain name lists, USTA table format, tab-separated tables with Y/N/Available/etc.
+  const AVAIL_YES = /^(available|yes|y|a|✓|✔|☑)$/i;
+  const AVAIL_NO  = /^(unavailable|not available|no|n|na|n\/a|✗|✘|☒)$/i;
+
+  let hasStatusInfo = false;
+  const entries = [];
+
+  // Split into lines, then each line into tab-separated cells
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // Detect if this looks like a multi-column USTA date table:
+  // header row with multiple date columns → find which column to use
+  // e.g. "Player  NTRP  4/15  4/22  5/6"
+  // Strategy: pick the FIRST date column that has any Y/yes entries (most upcoming match)
+  let dateColIndex = -1;
+  const headerLine = lines.find(l => /\bntrp\b|\brating\b/i.test(l));
+  if (headerLine) {
+    const cols = headerLine.split('\t');
+    const dateCol = cols.findIndex(c => /\d{1,2}[\/\-]\d{1,2}/.test(c));
+    if (dateCol >= 0) dateColIndex = dateCol;
+  }
+
+  for (const line of lines) {
+    // Skip obvious header / non-player lines
+    if (/^(player|name|ntrp|rating|team|league|match date|roster|availability|week|round|home|away|location|court|#)/i.test(line)) continue;
+    if (/^\d{1,2}[\/\-]\d{1,2}/.test(line) && !/[a-zA-Z]{3,}/.test(line)) continue; // date-only lines
+    if (line.length > 120) continue;
+
+    const cells = line.split('\t').map(c => c.trim()).filter(c => c !== '');
+
+    let name = '';
+    let statusFound = null;
+
+    if (cells.length >= 2) {
+      // Tab-separated row: find the name cell and status cell
+      for (let i = 0; i < cells.length; i++) {
+        const c = cells[i];
+        // Priority: if we know the date column index, use that cell for status
+        if (dateColIndex >= 0 && i === dateColIndex) {
+          if (AVAIL_YES.test(c)) { statusFound = true;  hasStatusInfo = true; }
+          else if (AVAIL_NO.test(c) || c === '') { statusFound = false; hasStatusInfo = true; }
+          continue;
+        }
+        if (AVAIL_YES.test(c))           { statusFound = true;  hasStatusInfo = true; continue; }
+        if (AVAIL_NO.test(c))            { statusFound = false; hasStatusInfo = true; continue; }
+        if (/^[34]\.\d+$/.test(c))        continue; // skip ratings
+        if (/^\d{1,2}$/.test(c))          continue; // skip numbers
+        if (/^\d{1,2}[\/\-]\d{1,2}/.test(c)) continue; // skip dates in cells
+        if (!name && c.length >= 3 && /[a-zA-Z]{2}/.test(c)) name = c;
+      }
+    } else {
+      // Single-column line: may contain name + status keywords inline
+      let raw = line;
+      if (/\bunavailable\b/i.test(raw) || /\bnot available\b/i.test(raw)) {
+        statusFound = false; hasStatusInfo = true;
+        raw = raw.replace(/\bnot available\b/gi, '').replace(/\bunavailable\b/gi, '');
+      } else if (/\bavailable\b/i.test(raw)) {
+        statusFound = true; hasStatusInfo = true;
+        raw = raw.replace(/\bavailable\b/gi, '');
+      } else if (/\byes\b/i.test(raw)) {
+        statusFound = true; hasStatusInfo = true;
+        raw = raw.replace(/\byes\b/gi, '');
+      } else if (/\bno\b/i.test(raw)) {
+        // "No" is common in names ("Noriko"), so only treat as status if isolated
+        if (/^\s*no\s*$/i.test(raw) || /\bno\b.*$/i.test(raw.replace(/[a-zA-Z]{4,}/g, ''))) {
+          statusFound = false; hasStatusInfo = true;
+          raw = raw.replace(/\bno\b/gi, '');
+        }
+      }
+      // Strip ratings, numbers, special chars
+      raw = raw.replace(/[34]\.\d+/g, '').replace(/[✓✔☑✗✘☒]/g, '').replace(/\s+/g, ' ').trim();
+      if (raw.length >= 3) name = raw;
+    }
+
+    if (!name) continue;
+    const isAvailable = statusFound !== null ? statusFound : true;
+    entries.push({ name, isAvailable });
+  }
+
+  return { entries, hasStatusInfo };
+}
+
 function fillFromAvail() {
   const text = document.getElementById('availText').value.trim();
   if (!text) return;
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+  const { entries, hasStatusInfo } = parseAvailabilityPaste(text);
+
   available.clear();
-  let matched = 0;
+  let markedAvail = 0, markedUnavail = 0;
   const unmatched = [];
-  for (const line of lines) {
-    const norm = line.toLowerCase().replace(/[^a-z\s]/g, '');
-    const words = norm.split(/\s+/).filter(w => w.length >= 2);
-    const found = ROSTER.find(p => {
-      const full = p.name.toLowerCase();
-      if (full === norm) return true;
-      const parts = full.split(' ');
-      const last = parts[parts.length - 1];
-      const first = parts[0];
-      return words.includes(last) || (first.length >= 3 && words.includes(first));
-    });
-    if (found) { available.add(found.id); matched++; }
-    else unmatched.push(line);
+
+  for (const { name, isAvailable } of entries) {
+    const found = matchRosterName(name);
+    if (!found) {
+      if (name.length >= 4 && /[a-zA-Z]{3}/.test(name)) unmatched.push(name);
+      continue;
+    }
+    if (isAvailable) { available.add(found.id); markedAvail++; }
+    else markedUnavail++;
   }
+
   renderRoster();
   updateCount();
   toggleAvailPanel();
   document.getElementById('availText').value = '';
-  const msg = matched + ' player' + (matched !== 1 ? 's' : '') + ' matched' +
-    (unmatched.length ? '. Not found: ' + unmatched.join(', ') : '.');
+
+  let msg;
+  if (hasStatusInfo) {
+    msg = `${markedAvail} available, ${markedUnavail} unavailable`;
+  } else {
+    msg = `${markedAvail} player${markedAvail !== 1 ? 's' : ''} matched`;
+  }
+  if (unmatched.length) msg += `. Not found: ${unmatched.slice(0,3).join(', ')}${unmatched.length > 3 ? '…' : ''}`;
   showAvailToast(msg, unmatched.length > 0);
 }
 
