@@ -2,16 +2,25 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tennis Lineup Optimizer — Documentation</title>
-<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Rafael RC — Lineup Optimizer</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta property="og:title" content="Rafael RC Lineup Optimizer">
+<meta property="og:description" content="Rafael RC 4.0 Women's lineup optimizer. Mark availability, scout opponents, and generate the optimal lineup based on ratings, partnerships, and matchups.">
+<meta property="og:image" content="https://rrc.tennislineup.ai/preview.svg">
+<meta property="og:url" content="https://rrc.tennislineup.ai">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Rafael RC Lineup Optimizer">
+<meta name="twitter:description" content="Rafael RC 4.0 Women's lineup optimizer. Mark availability, scout opponents, and generate the optimal lineup based on ratings, partnerships, and matchups.">
+<meta name="twitter:image" content="https://rrc.tennislineup.ai/preview.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --navy:#0B1A2E;--navy-mid:#152238;--navy-light:#1E2D45;
-  --gold:#C8A951;--gold-dim:rgba(200,169,81,.15);
+  --gold:#C8A951;--gold-light:#D4B96A;--gold-dim:rgba(200,169,81,.15);
   --white:#FFFFFF;--off-white:#F4F5F7;--light-gray:#E5E7EB;
   --green:#34D399;--green-bg:rgba(52,211,153,.12);
   --amber:#FBBF24;--amber-bg:rgba(251,191,36,.12);
@@ -19,542 +28,2106 @@
   --text:#1A1A2E;--text-sec:#6B7280;--text-light:#9CA3AF;
   --radius:12px;--radius-sm:8px;
   --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.04);
-  --sidebar-w:240px;
+  --shadow-lg:0 4px 20px rgba(0,0,0,.12);
 }
-html{font-size:16px;scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--text);min-height:100vh}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:'DM Sans',sans-serif;background:var(--off-white);color:var(--text);min-height:100vh;overflow-x:hidden}
 
-/* TOP NAV */
-.topnav{position:fixed;top:0;left:0;right:0;z-index:200;background:var(--navy);background-image:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.topnav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-.topnav-icon{width:32px;height:32px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--navy)}
-.topnav-title{font-family:'Bebas Neue',sans-serif;color:var(--white);font-size:20px;letter-spacing:1.5px}
-.topnav-title span{color:var(--gold)}
-.topnav-appbtn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;padding:7px 16px;border-radius:20px;border:1.5px solid var(--gold);background:transparent;color:var(--gold);text-decoration:none;transition:all .15s}
-.topnav-appbtn:hover{background:var(--gold);color:var(--navy)}
+/* HEADER */
+.header{background:var(--navy);padding:16px 20px;position:sticky;top:0;z-index:100;
+  background-image:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%)}
+.header-inner{max-width:900px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--navy);font-weight:700;font-family:'Bebas Neue',sans-serif}
+.logo h1{font-family:'Bebas Neue',sans-serif;color:var(--white);font-size:22px;letter-spacing:1.5px;font-weight:400}
+.logo h1 span{color:var(--gold)}
+.header-badge{background:var(--gold-dim);color:var(--gold);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
 
-/* LAYOUT */
-.layout{display:flex;min-height:100vh;padding-top:56px}
-
-/* SIDEBAR */
-.sidebar{width:var(--sidebar-w);flex-shrink:0;position:fixed;top:56px;bottom:0;left:0;overflow-y:auto;background:var(--white);border-right:1px solid var(--light-gray);padding:24px 0}
-.sidebar-section{margin-bottom:8px}
-.sidebar-heading{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.8px;padding:8px 20px 4px}
-.sidebar-link{display:block;font-size:13px;font-weight:500;color:var(--text-sec);text-decoration:none;padding:7px 20px;border-left:3px solid transparent;transition:all .15s}
-.sidebar-link:hover{color:var(--navy);background:var(--off-white);border-left-color:var(--gold)}
-.sidebar-link.active{color:var(--navy);font-weight:600;border-left-color:var(--gold);background:var(--gold-dim)}
-
-/* CONTENT */
-.content{margin-left:var(--sidebar-w);flex:1;padding:40px 48px 80px;max-width:860px}
-@media(max-width:700px){
-  .sidebar{display:none}
-  .content{margin-left:0;padding:24px 20px 60px}
-}
-
-/* PROSE */
-.doc-section{margin-bottom:56px;scroll-margin-top:72px}
-h1.doc-title{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:2px;color:var(--navy);line-height:1.05;margin-bottom:10px}
-.doc-subtitle{font-size:16px;color:var(--text-sec);margin-bottom:32px;line-height:1.5}
-h2.section-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1.5px;color:var(--navy);margin-bottom:4px;display:flex;align-items:center;gap:10px}
-h2.section-title .sec-icon{font-size:20px}
-.section-divider{height:3px;width:48px;background:var(--gold);border-radius:2px;margin-bottom:20px}
-h3.subsection{font-size:15px;font-weight:700;color:var(--navy);margin:24px 0 10px}
-p{font-size:14px;line-height:1.7;color:var(--text-sec);margin-bottom:12px}
-p strong{color:var(--text);font-weight:600}
-ul,ol{padding-left:20px;margin-bottom:14px}
-li{font-size:14px;line-height:1.7;color:var(--text-sec);margin-bottom:4px}
-li strong{color:var(--text)}
-
-/* CALLOUTS */
-.callout{display:flex;gap:12px;padding:14px 16px;border-radius:var(--radius-sm);margin:16px 0;font-size:13px;line-height:1.6}
-.callout-icon{font-size:18px;flex-shrink:0;margin-top:1px}
-.callout.tip{background:var(--green-bg);color:#065F46}
-.callout.note{background:var(--amber-bg);color:#92400E}
-.callout.warn{background:var(--red-bg);color:#991B1B}
-.callout.info{background:#EFF6FF;color:#1E40AF}
+/* MAIN */
+.main{max-width:900px;margin:0 auto;padding:16px}
 
 /* STEPS */
-.steps{display:flex;flex-direction:column;gap:12px;margin:16px 0}
-.step-card{display:flex;gap:14px;background:var(--white);border-radius:var(--radius-sm);padding:14px 16px;box-shadow:var(--shadow)}
-.step-num{width:28px;height:28px;background:var(--navy);color:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px;flex-shrink:0;margin-top:1px}
-.step-body{flex:1}
-.step-title{font-weight:700;font-size:14px;color:var(--navy);margin-bottom:4px}
-.step-desc{font-size:13px;color:var(--text-sec);line-height:1.6}
+.step{margin-bottom:20px;animation:fadeUp .4s ease both}
+.step:nth-child(2){animation-delay:.05s}
+.step:nth-child(3){animation-delay:.1s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 
-/* TABLE */
-.ftable{width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}
-.ftable th{background:var(--navy);color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:.8px;padding:10px 14px;text-align:left;font-weight:400}
-.ftable td{padding:10px 14px;border-bottom:1px solid var(--light-gray);color:var(--text-sec);vertical-align:top;line-height:1.5}
-.ftable tr:last-child td{border-bottom:none}
-.ftable tr:nth-child(even) td{background:var(--off-white)}
-.ftable td strong{color:var(--text)}
+.step-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.step-num{width:28px;height:28px;background:var(--navy);color:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px;flex-shrink:0}
+.step-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--navy)}
 
-/* TAGS */
-.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px;margin:2px 3px 2px 0}
-.tag-hot{background:var(--green-bg);color:#059669}
-.tag-caution{background:var(--red-bg);color:var(--red)}
-.tag-captain{background:var(--gold-dim);color:var(--gold)}
+/* CARDS */
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px}
+.card-flush{padding:0;overflow:hidden}
+
+/* ROSTER GRID */
+.roster-grid{display:grid;grid-template-columns:1fr;gap:8px}
+@media(min-width:600px){.roster-grid{grid-template-columns:1fr 1fr}}
+
+.player-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);border:2px solid var(--light-gray);cursor:pointer;transition:all .15s;user-select:none;-webkit-user-select:none;position:relative}
+.player-row:active{transform:scale(.98)}
+.player-row.checked{border-color:var(--gold);background:var(--gold-dim)}
+.player-row.unavailable{opacity:.4;border-style:dashed}
+.player-row input[type=checkbox]{display:none}
+.player-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--light-gray);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:13px;color:transparent}
+.player-row.checked .player-check{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.player-info{flex:1;min-width:0}
+.player-name{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player-meta{font-size:11px;color:var(--text-sec);margin-top:1px;display:flex;gap:6px;flex-wrap:wrap}
+.player-tag{font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.3px}
+.tag-rating{background:var(--navy);color:var(--gold)}
 .tag-singles{background:#7C3AED22;color:#7C3AED}
 .tag-ad{background:#3B82F622;color:#3B82F6}
 .tag-deuce{background:#10B98122;color:#10B981}
-.tag-rating{background:var(--navy);color:var(--gold)}
-.tag-added{background:#6366F122;color:#6366F1}
+.tag-captain{background:var(--gold-dim);color:var(--gold)}
+.tag-warn{background:var(--red-bg);color:var(--red)}
+.tag-hot{background:var(--green-bg);color:#059669}
 
-/* CONFIDENCE */
-.conf-demo{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
-.conf-pill{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600}
-.conf-pill.green{background:var(--green-bg);color:#059669}
-.conf-pill.amber{background:var(--amber-bg);color:#D97706}
-.conf-pill.red{background:var(--red-bg);color:var(--red)}
-.conf-dot{width:9px;height:9px;border-radius:50%}
+.select-controls{display:flex;gap:8px;margin-bottom:10px}
+.select-btn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;border:1.5px solid var(--light-gray);background:var(--white);color:var(--text-sec);cursor:pointer;transition:all .15s}
+.select-btn:hover{border-color:var(--gold);color:var(--gold)}
 
-/* CODE */
-code{font-family:'Menlo','Courier New',monospace;font-size:12px;background:#F1F5F9;padding:2px 6px;border-radius:4px;color:#334155}
-pre{background:#0F172A;border-radius:var(--radius-sm);padding:16px;margin:14px 0;overflow-x:auto}
-pre code{background:none;padding:0;color:#94A3B8;font-size:12px;line-height:1.7}
+/* OPPONENT FORM */
+.opp-section{margin-bottom:16px}
+.opp-section-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.8px;color:var(--navy);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.opp-section-title .line-badge{font-size:11px;background:var(--navy);color:var(--gold);padding:2px 8px;border-radius:4px;font-family:'DM Sans',sans-serif;font-weight:600}
+.opp-row{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.opp-row label{font-size:11px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.3px;width:44px;flex-shrink:0;text-align:right}
+.opp-input{flex:1;font-family:'DM Sans',sans-serif;font-size:14px;padding:10px 12px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);outline:none;transition:border-color .15s;background:var(--white)}
+.opp-input:focus{border-color:var(--gold)}
+.opp-input::placeholder{color:var(--text-light)}
+.opp-input.rating-input{width:70px;flex:none;text-align:center}
+.opp-link-btn{width:34px;height:38px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all .15s;color:var(--text-light);padding:0}
+.opp-link-btn:hover{border-color:var(--gold);color:var(--gold)}
+.opp-link-btn.active{border-color:var(--gold);background:var(--gold-dim);color:var(--gold)}
+.opp-url-row{display:none;gap:8px;margin-top:-2px;padding-bottom:6px;animation:fadeUp .2s ease both}
+.opp-url-row.open{display:flex}
+.opp-url-input{flex:1;font-family:'DM Sans',sans-serif;font-size:12px;padding:7px 10px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);outline:none;transition:border-color .15s;background:var(--white);color:var(--text-sec)}
+.opp-url-input:focus{border-color:var(--gold)}
+.opp-url-input::placeholder{color:var(--text-light)}
+.opp-divider{height:1px;background:var(--light-gray);margin:12px 0}
+.opp-vs{font-size:11px;color:var(--text-light);font-weight:600;text-align:center;margin:2px 0}
 
-/* FAQ */
-.faq-item{margin-bottom:20px}
-.faq-q{font-weight:700;font-size:14px;color:var(--navy);margin-bottom:6px}
-.faq-a{font-size:14px;color:var(--text-sec);line-height:1.7}
+/* GENERATE BUTTON */
+.generate-wrap{padding:0 0 20px}
+.generate-btn{width:100%;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;padding:16px;border:none;border-radius:var(--radius);cursor:pointer;transition:all .2s;
+  background:linear-gradient(135deg,var(--navy) 0%,var(--navy-mid) 100%);color:var(--gold);position:relative;overflow:hidden}
+.generate-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.generate-btn:active{transform:scale(.98)}
+.generate-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.generate-btn .shimmer{position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(200,169,81,.1),transparent);animation:shimmer 3s infinite}
+@keyframes shimmer{0%{left:-100%}100%{left:100%}}
 
-/* BACK TO TOP */
-.back-top{position:fixed;bottom:28px;right:24px;width:38px;height:38px;background:var(--navy);color:var(--gold);border:none;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:all .15s;z-index:100}
-.back-top:hover{background:var(--navy-mid);transform:translateY(-2px)}
+.player-count{text-align:center;font-size:13px;color:var(--text-sec);margin-bottom:10px}
+.player-count strong{color:var(--navy)}
+.player-count.insufficient{color:var(--red)}
+
+/* RESULTS */
+.results{display:none}
+.results.visible{display:block;animation:fadeUp .4s ease both}
+
+.match-header{background:var(--navy);border-radius:var(--radius);padding:20px;margin-bottom:16px;text-align:center;
+  background-image:linear-gradient(135deg,var(--navy) 0%,var(--navy-light) 100%)}
+.match-title{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--white);letter-spacing:2px}
+.match-subtitle{font-size:12px;color:var(--gold);margin-top:4px;font-weight:500}
+.confidence-bar-wrap{margin-top:16px}
+.confidence-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text-light);margin-bottom:6px}
+.confidence-label strong{color:var(--gold);font-size:14px}
+.confidence-track{height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}
+.confidence-fill{height:100%;border-radius:4px;transition:width .8s ease;background:linear-gradient(90deg,var(--red),var(--amber),var(--green))}
+
+/* LINE CARDS */
+.line-card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;overflow:hidden;animation:fadeUp .4s ease both}
+.line-card:nth-child(2){animation-delay:.06s}
+.line-card:nth-child(3){animation-delay:.12s}
+.line-card:nth-child(4){animation-delay:.18s}
+.line-card:nth-child(5){animation-delay:.24s}
+.line-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--light-gray)}
+.line-label{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--navy)}
+.line-confidence{display:flex;align-items:center;gap:6px}
+.line-conf-dot{width:10px;height:10px;border-radius:50%}
+.line-conf-text{font-size:12px;font-weight:600}
+.line-body{padding:16px}
+.line-matchup{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.line-team{flex:1}
+.line-vs{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--text-light);flex-shrink:0}
+.line-player{font-weight:600;font-size:14px}
+.line-player-rating{font-size:12px;color:var(--text-sec);font-weight:400}
+.line-player-side{font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px;margin-left:4px}
+.line-opp{flex:1;text-align:right}
+.line-opp-name{font-size:13px;color:var(--text-sec)}
+.line-opp-rating{font-size:12px;color:var(--text-light)}
+.line-reasoning{font-size:12px;color:var(--text-sec);line-height:1.5;padding:10px 12px;background:var(--off-white);border-radius:var(--radius-sm)}
+.line-reasoning strong{color:var(--text)}
+.line-reasoning .partnership-record{display:inline-flex;align-items:center;gap:4px;background:var(--gold-dim);color:var(--gold);padding:1px 6px;border-radius:4px;font-weight:600;font-size:11px}
+.rating-edge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;margin-bottom:8px;display:inline-block}
+.edge-pos{background:var(--green-bg);color:#059669}
+.edge-neg{background:var(--red-bg);color:var(--red)}
+.edge-neutral{background:var(--amber-bg);color:#D97706}
+
+/* WARNINGS */
+.warnings{margin-top:16px}
+.warning-card{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:var(--radius-sm);margin-bottom:8px;font-size:13px;line-height:1.4}
+.warning-card.warn-amber{background:var(--amber-bg);color:#92400E}
+.warning-card.warn-red{background:var(--red-bg);color:#991B1B}
+.warning-card.warn-green{background:var(--green-bg);color:#065F46}
+.warning-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+
+/* ALTERNATIVES */
+.alt-section{margin-top:20px}
+.alt-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--navy);margin-bottom:10px}
+.alt-card{padding:12px;border:1.5px solid var(--light-gray);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:all .15s}
+.alt-card:hover{border-color:var(--gold);background:var(--gold-dim)}
+.alt-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.alt-rank{font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--text-sec)}
+.alt-score{font-size:12px;font-weight:600;color:var(--gold)}
+.alt-lines{font-size:12px;color:var(--text-sec);line-height:1.6}
+
+/* FOOTER */
+.footer{text-align:center;padding:30px 20px;font-size:11px;color:var(--text-light)}
+.footer-docs-link{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--gold);text-decoration:none;padding:3px 10px;border:1px solid rgba(200,169,81,.4);border-radius:20px;transition:all .15s;vertical-align:middle}
+.footer-docs-link:hover{background:var(--gold-dim);border-color:var(--gold)}
+
+/* ADD PLAYER */
+.add-player-btn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;border:1.5px solid var(--gold);background:var(--gold-dim);color:var(--gold);cursor:pointer;transition:all .15s}
+.add-player-btn:hover{background:var(--gold);color:var(--navy)}
+.add-panel{display:none;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;animation:fadeUp .25s ease both}
+.add-panel.open{display:block}
+.add-panel-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:.8px;color:var(--navy);margin-bottom:12px}
+.add-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(min-width:600px){.add-grid{grid-template-columns:1fr 1fr 1fr}}
+.add-field{display:flex;flex-direction:column;gap:3px}
+.add-field.full{grid-column:1/-1}
+.add-label{font-size:10px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.3px}
+.add-input{font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);outline:none;transition:border-color .15s}
+.add-input:focus{border-color:var(--gold)}
+.add-select{font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);outline:none;background:var(--white);transition:border-color .15s;-webkit-appearance:none;appearance:none}
+.add-select:focus{border-color:var(--gold)}
+.add-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end}
+.add-save{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;padding:8px 24px;border:none;border-radius:var(--radius-sm);background:var(--navy);color:var(--gold);cursor:pointer;transition:all .15s}
+.add-save:hover{background:var(--navy-mid)}
+.add-cancel{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:8px 16px;border:1.5px solid var(--light-gray);border-radius:var(--radius-sm);background:var(--white);color:var(--text-sec);cursor:pointer;transition:all .15s}
+.add-cancel:hover{border-color:var(--text-sec)}
+.player-row .remove-btn{position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;border:none;background:var(--red-bg);color:var(--red);font-size:11px;cursor:pointer;display:none;align-items:center;justify-content:center;line-height:1}
+.player-row.added .remove-btn{display:flex}
+
+/* PARTNERSHIPS PANEL */
+.pship-btn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;border:1.5px solid var(--navy);background:rgba(11,26,46,.06);color:var(--navy);cursor:pointer;transition:all .15s}
+.pship-btn:hover{background:var(--navy);color:var(--gold)}
+.pship-panel{display:none;background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;animation:fadeUp .25s ease both}
+.pship-panel.open{display:block}
+.pship-panel-title{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:.8px;color:var(--navy);margin-bottom:12px}
+.pship-form{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(min-width:600px){.pship-form{grid-template-columns:1fr 1fr 1fr 1fr}}
+.pship-field{display:flex;flex-direction:column;gap:3px}
+.pship-field.full{grid-column:1/-1}
+.pship-field.half{grid-column:span 1}
+.pship-list{margin-top:14px;border-top:1px solid var(--light-gray);padding-top:12px}
+.pship-list-title{font-size:11px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px}
+.pship-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--off-white);margin-bottom:6px;font-size:13px}
+.pship-item-names{font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pship-item-record{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px}
+.pship-item-record.good{background:var(--green-bg);color:#059669}
+.pship-item-record.ok{background:var(--amber-bg);color:#D97706}
+.pship-item-record.bad{background:var(--red-bg);color:var(--red)}
+.pship-item-note{font-size:11px;color:var(--text-light);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pship-item-trend{font-size:13px}
+.pship-item-del{width:22px;height:22px;border-radius:50%;border:none;background:var(--red-bg);color:var(--red);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pship-empty{font-size:12px;color:var(--text-light);font-style:italic;text-align:center;padding:8px}
+
+/* QUICK MODE */
+.mode-toggle{display:flex;background:var(--light-gray);border-radius:var(--radius-sm);padding:3px;margin-bottom:16px}
+.mode-btn{flex:1;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:8px;border:none;border-radius:6px;cursor:pointer;background:transparent;color:var(--text-sec);transition:all .15s}
+.mode-btn.active{background:var(--white);color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+
+/* PRINT / SAVE */
+@media print {
+  .header,.step,.generate-wrap,.footer,.save-lineup-wrap{display:none!important}
+  .main{padding:0!important;max-width:100%!important}
+  body{background:white!important}
+  .results{display:block!important}
+}
+
+/* PLAYER PROFILE MODAL */
+.pmodal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:none;align-items:flex-end;justify-content:center}
+.pmodal-overlay.open{display:flex}
+.pmodal{background:var(--white);border-radius:16px 16px 0 0;width:100%;max-width:520px;max-height:84vh;overflow-y:auto;animation:slideUp .28s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.pmodal-handle{width:36px;height:4px;border-radius:2px;background:var(--light-gray);margin:12px auto 4px}
+.pmodal-header{display:flex;align-items:flex-start;justify-content:space-between;padding:12px 20px 10px}
+.pmodal-name{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;color:var(--navy);line-height:1}
+.pmodal-close{width:30px;height:30px;border-radius:50%;border:none;background:var(--off-white);color:var(--text-sec);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.pmodal-badges{display:flex;flex-wrap:wrap;gap:5px;padding:0 20px 12px}
+.pmodal-body{padding:0 20px 28px}
+.pmodal-sec-title{font-size:10px;font-weight:600;color:var(--text-sec);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.pmodal-stats{display:flex;gap:10px;margin-bottom:16px}
+.pmodal-stat{flex:1;background:var(--off-white);border-radius:var(--radius-sm);padding:10px;text-align:center}
+.pmodal-stat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--navy);line-height:1}
+.pmodal-stat-lbl{font-size:10px;color:var(--text-sec);margin-top:3px}
+.pmodal-pship{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--off-white);margin-bottom:6px;font-size:13px}
+.pmodal-pship-name{font-weight:600;flex:1}
+.pmodal-pship-note{font-size:11px;color:var(--text-light);flex:2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmodal-pship-rec{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;flex-shrink:0}
+.pmodal-pattern{font-size:13px;color:var(--text);line-height:1.5;padding:9px 12px;background:var(--off-white);border-radius:var(--radius-sm);margin-bottom:6px}
+.pmodal-divider{height:1px;background:var(--light-gray);margin:14px 0}
+.player-name-link{cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.player-name-link:hover .pinfo-icon{opacity:1}
+.pinfo-icon{font-size:12px;color:var(--gold);opacity:.6;transition:opacity .15s;font-weight:400;font-family:'DM Sans',sans-serif}
+.save-lineup-wrap{text-align:center;margin-top:16px;padding-bottom:8px}
+.save-lineup-btn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:10px 24px;border-radius:20px;border:1.5px solid var(--navy);background:var(--white);color:var(--navy);cursor:pointer;transition:all .15s}
+.save-lineup-btn:hover{background:var(--navy);color:var(--white)}
+
+/* URL LOOKUP */
+.url-lookup-row{display:flex;gap:6px;align-items:center}
+.url-lookup-input{flex:1;font-family:'DM Sans',sans-serif;font-size:12px;padding:8px 10px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);outline:none;transition:border-color .15s;min-width:0}
+.url-lookup-input:focus{border-color:var(--gold)}
+.url-lookup-btn{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;padding:8px 12px;border-radius:var(--radius-sm);border:none;background:var(--navy);color:var(--gold);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.url-lookup-btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* PASTE ROSTER */
+.paste-panel{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:12px;display:none}
+.paste-panel.open{display:block}
+.paste-textarea{width:100%;font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 12px;border:2px solid var(--light-gray);border-radius:var(--radius-sm);outline:none;resize:vertical;min-height:130px;transition:border-color .15s;box-sizing:border-box}
+.paste-textarea:focus{border-color:var(--gold)}
+.paste-hint{font-size:11px;color:var(--text-light);margin-top:6px;font-style:italic}
+.paste-actions{display:flex;gap:8px;margin-top:10px;justify-content:flex-end}
+.paste-btn-fill{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:8px 20px;border-radius:20px;border:none;background:var(--navy);color:var(--gold);cursor:pointer}
+.paste-btn-cancel{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:8px 16px;border-radius:20px;border:1.5px solid var(--light-gray);background:var(--white);color:var(--text-sec);cursor:pointer}
+
+/* RESPONSIVE */
+@media(min-width:600px){
+  .main{padding:24px}
+  .card{padding:20px}
+  .opp-row label{width:60px}
+}
 </style>
 </head>
 <body>
 
-<nav class="topnav">
-  <a class="topnav-logo" href="../">
-    <div class="topnav-icon">R</div>
-    <span class="topnav-title">RAFAEL RC <span>LINEUP</span></span>
-  </a>
-  <a class="topnav-appbtn" href="../">Open App &#8599;</a>
-</nav>
-
-<div class="layout">
-
-  <aside class="sidebar">
-    <div class="sidebar-section">
-      <div class="sidebar-heading">Getting Started</div>
-      <a class="sidebar-link active" href="#introduction">Introduction</a>
-      <a class="sidebar-link" href="#how-to-use">How to Use the App</a>
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">R</div>
+      <h1>RAFAEL RC <span>LINEUP</span></h1>
     </div>
-    <div class="sidebar-section">
-      <div class="sidebar-heading">Features</div>
-      <a class="sidebar-link" href="#roster">Building Your Roster</a>
-      <a class="sidebar-link" href="#partnerships">Partnerships</a>
-      <a class="sidebar-link" href="#opponent">Opponent Lineup</a>
-      <a class="sidebar-link" href="#generating">Generating a Lineup</a>
+    <div style="display:flex;align-items:center;gap:10px">
+      <a href="docs/" style="font-size:12px;font-weight:600;color:rgba(255,255,255,.65);text-decoration:none;transition:color .15s" onmouseover="this.style.color='#C8A951'" onmouseout="this.style.color='rgba(255,255,255,.65)'">Docs &#8599;</a>
+      <div class="header-badge">4.0 Women's</div>
     </div>
-    <div class="sidebar-section">
-      <div class="sidebar-heading">Reading Results</div>
-      <a class="sidebar-link" href="#results">The Results Panel</a>
-      <a class="sidebar-link" href="#confidence">Confidence Scores</a>
-      <a class="sidebar-link" href="#warnings">Warnings &amp; Notes</a>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-heading">Algorithm</div>
-      <a class="sidebar-link" href="#algorithm">How the Optimizer Works</a>
-      <a class="sidebar-link" href="#scoring">Scoring Breakdown</a>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-heading">Reference</div>
-      <a class="sidebar-link" href="#tags">Player Tags</a>
-      <a class="sidebar-link" href="#faq">FAQ &amp; Tips</a>
-    </div>
-  </aside>
-
-  <main class="content">
-
-    <!-- INTRODUCTION -->
-    <section class="doc-section" id="introduction">
-      <h1 class="doc-title">Tennis Lineup Optimizer</h1>
-      <p class="doc-subtitle">A smart lineup tool for USTA tennis captains. Enter your roster, mark who's available, add opponent ratings, and get the optimal lineup in seconds — built around real match data, partnership history, and court-side fit.</p>
-
-      <div class="callout info">
-        <span class="callout-icon">&#9432;</span>
-        <div>Works on any phone or desktop — no install needed. All data is stored locally in your browser.</div>
-      </div>
-
-      <h3 class="subsection">What it does</h3>
-      <p>The optimizer evaluates every valid player combination and picks the lineup most likely to win the most lines. It accounts for:</p>
-      <ul>
-        <li><strong>USTA dynamic ratings</strong> — the official estimated rating for each player</li>
-        <li><strong>Win/loss records</strong> — current and prior season performance</li>
-        <li><strong>Partnership history</strong> — how doubles pairs have actually performed together</li>
-        <li><strong>Court side preference</strong> — Ad vs. Deuce side fit</li>
-        <li><strong>Opponent scouting</strong> — optional ratings for each opponent player</li>
-        <li><strong>Singles capability</strong> — only players you flag as singles-capable are placed in singles lines</li>
-      </ul>
-
-      <h3 class="subsection">Format</h3>
-      <p>Designed for the standard USTA adult format: <strong>2 singles lines (S1, S2)</strong> and <strong>3 doubles lines (D1, D2, D3)</strong>. Eight players are placed total.</p>
-    </section>
-
-    <!-- HOW TO USE -->
-    <section class="doc-section" id="how-to-use">
-      <h2 class="section-title"><span class="sec-icon">&#127919;</span> How to Use the App</h2>
-      <div class="section-divider"></div>
-
-      <div class="steps">
-        <div class="step-card">
-          <div class="step-num">1</div>
-          <div class="step-body">
-            <div class="step-title">Configure your team</div>
-            <div class="step-desc">Tap the <strong>gear icon</strong> in the top right to set your team name, level (e.g. 4.0 Women's), and season year. This personalizes the header and record labels.</div>
-          </div>
-        </div>
-        <div class="step-card">
-          <div class="step-num">2</div>
-          <div class="step-body">
-            <div class="step-title">Build your roster</div>
-            <div class="step-desc">Tap <strong>+ Add Player</strong> to add each player. Paste a TennisRecord URL to auto-fill their name and rating. All players are saved in your browser and persist between sessions.</div>
-          </div>
-        </div>
-        <div class="step-card">
-          <div class="step-num">3</div>
-          <div class="step-body">
-            <div class="step-title">Mark who's available</div>
-            <div class="step-desc">All players are selected by default. Tap any player to toggle them unavailable. Only available players are considered in the lineup.</div>
-          </div>
-        </div>
-        <div class="step-card">
-          <div class="step-num">4</div>
-          <div class="step-body">
-            <div class="step-title">Enter the opponent lineup (optional)</div>
-            <div class="step-desc">Use <strong>Full Scouting</strong> to enter opponent names and ratings, or <strong>Quick Mode</strong> to skip. You can paste a full roster at once using <strong>Paste Opponent Roster</strong>.</div>
-          </div>
-        </div>
-        <div class="step-card">
-          <div class="step-num">5</div>
-          <div class="step-body">
-            <div class="step-title">Generate and save</div>
-            <div class="step-desc">Tap <strong>Generate Optimal Lineup</strong>. Review the results, check alternatives, then tap <strong>Save / Print Lineup</strong> to export as a PDF or screenshot.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="callout tip">
-        <span class="callout-icon">&#10024;</span>
-        <div><strong>Tip:</strong> You need at least 8 available players and at least 2 marked as singles-capable to generate a lineup.</div>
-      </div>
-    </section>
-
-    <!-- ROSTER -->
-    <section class="doc-section" id="roster">
-      <h2 class="section-title"><span class="sec-icon">&#128101;</span> Building Your Roster</h2>
-      <div class="section-divider"></div>
-
-      <p>The roster starts empty — add your players once and they're saved permanently in your browser.</p>
-
-      <h3 class="subsection">Adding a player</h3>
-      <p>Tap <strong>+ Add Player</strong>. The fastest way is to paste a <strong>TennisRecord.com</strong> profile URL — the app fetches the player's name and dynamic rating automatically. Then fill in:</p>
-
-      <table class="ftable">
-        <tr><th>Field</th><th>What to enter</th></tr>
-        <tr><td><strong>Dynamic Rating</strong></td><td>Auto-filled from TennisRecord, or enter manually (e.g. 3.72).</td></tr>
-        <tr><td><strong>Preferred Side</strong></td><td>Ad (left court), Deuce (right court), or Flexible. Used for side-fit scoring.</td></tr>
-        <tr><td><strong>Primary Line</strong></td><td>Doubles, Singles, or Both. Only players set to Singles or Both can be placed at S1/S2.</td></tr>
-        <tr><td><strong>Win % estimate</strong></td><td>Your best guess at their win rate at this level (0–100). Used as a tiebreaker in scoring.</td></tr>
-        <tr><td><strong>Current / Prior Season W-L</strong></td><td>Match record for the current and previous year. Shown on the player card and factored into scoring.</td></tr>
-      </table>
-
-      <h3 class="subsection">Removing a player</h3>
-      <p>Tap the <strong>&times;</strong> button in the top-right corner of any player card and confirm. The player is removed from the roster and any partnerships involving them are also removed.</p>
-
-      <h3 class="subsection">Player profile</h3>
-      <p>Tap a player's name (or the <span style="color:var(--gold)">ⓘ</span> icon) to open a profile sheet showing their season records, partnership history, and player patterns.</p>
-
-      <div class="callout note">
-        <span class="callout-icon">&#9888;</span>
-        <div>Player data is saved to your browser's local storage. It persists on the same device but won't sync to teammates' phones automatically.</div>
-      </div>
-    </section>
-
-    <!-- PARTNERSHIPS -->
-    <section class="doc-section" id="partnerships">
-      <h2 class="section-title"><span class="sec-icon">&#129309;</span> Partnerships</h2>
-      <div class="section-divider"></div>
-
-      <p>Partnership data is one of the most powerful inputs to the optimizer. A pair with a strong track record gets a significant scoring bonus; pairs flagged as Avoid are heavily penalized.</p>
-
-      <h3 class="subsection">Adding a partnership</h3>
-      <p>Tap <strong>Partnerships</strong>, select two players, enter their combined wins and losses, choose a trend, and add optional notes. If a partnership already exists for that pair, saving replaces it.</p>
-
-      <table class="ftable">
-        <tr><th>Trend</th><th>Meaning</th><th>Score effect</th></tr>
-        <tr><td><strong>Trending Up &#9650;</strong></td><td>Recent results are better than their historical average</td><td>+12 pts</td></tr>
-        <tr><td><strong>Stable &#9679;</strong></td><td>Consistent, no strong directional change</td><td>0 pts</td></tr>
-        <tr><td><strong>Trending Down &#9660;</strong></td><td>Recent results are worse than average</td><td>−8 pts</td></tr>
-      </table>
-
-      <h3 class="subsection">Flagging an Avoid pair</h3>
-      <p>Check <strong>Flag as Avoid</strong> when saving a partnership to mark two players as incompatible. The optimizer will heavily penalize this pairing (−120 pts) and a red warning will appear if they end up in the same doubles line.</p>
-
-      <div class="callout tip">
-        <span class="callout-icon">&#10024;</span>
-        <div><strong>Captain tip:</strong> Update partnership records after each match weekend so the optimizer learns from your team's actual results over the season.</div>
-      </div>
-    </section>
-
-    <!-- OPPONENT -->
-    <section class="doc-section" id="opponent">
-      <h2 class="section-title"><span class="sec-icon">&#128269;</span> Opponent Lineup</h2>
-      <div class="section-divider"></div>
-
-      <h3 class="subsection">Full Scouting vs. Quick Mode</h3>
-      <p><strong>Full Scouting</strong> lets you enter opponent names and ratings per line. The optimizer matches your players against specific opponents to maximize rating edges. <strong>Quick Mode</strong> skips this and optimizes based on your team's internal strengths only.</p>
-
-      <h3 class="subsection">Pasting a roster</h3>
-      <p>Tap <strong>Paste Opponent Roster</strong> and paste in any format:</p>
-      <ul>
-        <li>Plain list: <code>Jane Smith 3.80</code> — sorted by rating and auto-assigned</li>
-        <li>Labeled: <code>S1: Alice Brown 3.75</code> or <code>D1: Carol Davis 3.68 / Eve Wilson 3.65</code></li>
-        <li>TennisRecord URLs — ratings fetched automatically</li>
-      </ul>
-
-      <h3 class="subsection">Linking opponent profiles</h3>
-      <p>Tap the <strong>&#128279;</strong> icon next to any opponent slot to add a TennisRecord URL. Their name in the results will become a clickable link to their full profile.</p>
-    </section>
-
-    <!-- GENERATING -->
-    <section class="doc-section" id="generating">
-      <h2 class="section-title"><span class="sec-icon">&#9889;</span> Generating a Lineup</h2>
-      <div class="section-divider"></div>
-
-      <p>Once 8+ players are available the <strong>Generate Optimal Lineup</strong> button activates. The optimizer scores every valid combination and returns the top 5. Results appear below the button with the page scrolling automatically.</p>
-
-      <h3 class="subsection">Minimum requirements</h3>
-      <ul>
-        <li>At least <strong>8 available players</strong></li>
-        <li>At least <strong>2 players</strong> with Primary Line set to Singles or Both</li>
-      </ul>
-
-      <div class="callout warn">
-        <span class="callout-icon">&#9888;</span>
-        <div>If fewer than 2 singles-capable players are available, a message will prompt you to mark at least 2 players as singles-eligible before generating.</div>
-      </div>
-    </section>
-
-    <!-- RESULTS -->
-    <section class="doc-section" id="results">
-      <h2 class="section-title"><span class="sec-icon">&#127942;</span> The Results Panel</h2>
-      <div class="section-divider"></div>
-
-      <p>Each lineup shows a <strong>Match Header</strong> with overall confidence, five line cards (S1, S2, D1, D2, D3), any warnings, and up to 3 alternative lineups.</p>
-
-      <h3 class="subsection">Line card anatomy</h3>
-      <table class="ftable">
-        <tr><th>Element</th><th>What it means</th></tr>
-        <tr><td><strong>Rating edge badge</strong></td><td>Your player's (or pair's average) rating vs. the opponent's. Green = your advantage, red = opponent's advantage, amber = even.</td></tr>
-        <tr><td><strong>Confidence label</strong></td><td>Favorable / Competitive / Tough — see Confidence Scores below.</td></tr>
-        <tr><td><strong>Matchup display</strong></td><td>Your player(s) on the left, opponent on the right. Opponent names link to TennisRecord if a URL was provided.</td></tr>
-        <tr><td><strong>Reasoning text</strong></td><td>Why this placement was chosen — partnership record, trend, side fit, form.</td></tr>
-      </table>
-
-      <h3 class="subsection">Court side tags</h3>
-      <p>
-        <span class="tag tag-ad">Ad</span> Left court &nbsp;
-        <span class="tag tag-deuce">Deu</span> Right court &nbsp;
-        <span class="tag tag-added" style="background:#8B5CF622;color:#8B5CF6">Flex</span> Either side
-      </p>
-
-      <h3 class="subsection">Alternative lineups</h3>
-      <p>Up to 3 alternatives appear below the main result, each showing how many optimizer points it scores below the top choice — useful when availability changes or the captain wants a different approach.</p>
-    </section>
-
-    <!-- CONFIDENCE -->
-    <section class="doc-section" id="confidence">
-      <h2 class="section-title"><span class="sec-icon">&#128200;</span> Confidence Scores</h2>
-      <div class="section-divider"></div>
-
-      <p>Every line shows a confidence indicator. It's a calculated estimate based on rating gaps and win/loss history — not a guarantee.</p>
-
-      <div class="conf-demo">
-        <div class="conf-pill green"><div class="conf-dot" style="background:var(--green)"></div> Favorable (65%+)</div>
-        <div class="conf-pill amber"><div class="conf-dot" style="background:var(--amber)"></div> Competitive (45–64%)</div>
-        <div class="conf-pill red"><div class="conf-dot" style="background:var(--red)"></div> Tough (&lt;45%)</div>
-      </div>
-
-      <h3 class="subsection">Singles confidence formula</h3>
-      <p><code>50 + (rating edge × 80) + (win% × 30)</code>, clamped to 20–90%.</p>
-
-      <h3 class="subsection">Doubles confidence formula</h3>
-      <p><code>50 + (rating edge × 60) + (partnership win% × 25)</code>, with a −30 penalty if the pair has an Avoid flag.</p>
-
-      <div class="callout note">
-        <span class="callout-icon">&#9888;</span>
-        <div>Confidence is most meaningful in Full Scouting mode with opponent ratings entered. In Quick Mode all opponents default to 3.70, so confidence primarily reflects your team's internal strengths.</div>
-      </div>
-    </section>
-
-    <!-- WARNINGS -->
-    <section class="doc-section" id="warnings">
-      <h2 class="section-title"><span class="sec-icon">&#9888;</span> Warnings &amp; Notes</h2>
-      <div class="section-divider"></div>
-
-      <table class="ftable">
-        <tr><th>Type</th><th>Color</th><th>Triggered when</th></tr>
-        <tr><td><strong>Red warning</strong></td><td style="color:var(--red)">&#9632; Red</td><td>An Avoid-flagged pair appears in doubles</td></tr>
-        <tr><td><strong>Amber caution</strong></td><td style="color:#D97706">&#9632; Amber</td><td>Both players in a doubles pair have a win rate below 35% and no partnership history</td></tr>
-        <tr><td><strong>Green note</strong></td><td style="color:#059669">&#9632; Green</td><td>A doubles pair is undefeated together, or a partnership is trending upward</td></tr>
-      </table>
-
-      <div class="callout tip">
-        <span class="callout-icon">&#10024;</span>
-        <div>Warnings are informational — they don't block the lineup. The captain always has the final call.</div>
-      </div>
-    </section>
-
-    <!-- ALGORITHM -->
-    <section class="doc-section" id="algorithm">
-      <h2 class="section-title"><span class="sec-icon">&#9881;</span> How the Optimizer Works</h2>
-      <div class="section-divider"></div>
-
-      <p>The optimizer uses a <strong>brute-force combinatorial search</strong> — it scores every valid lineup and returns the top 5. No machine learning, no black box. Every score is deterministic and explainable.</p>
-
-      <div class="steps">
-        <div class="step-card">
-          <div class="step-num">1</div>
-          <div class="step-body">
-            <div class="step-title">Identify singles candidates</div>
-            <div class="step-desc">Players with Primary Line set to Singles or Both are sorted by singles score. The top 4–6 are tried as S1/S2 combinations.</div>
-          </div>
-        </div>
-        <div class="step-card">
-          <div class="step-num">2</div>
-          <div class="step-body">
-            <div class="step-title">Build the doubles pool</div>
-            <div class="step-desc">Remaining available players are sorted by <code>rating × (0.5 + win%)</code>. The top 12 form the doubles pool to keep computation fast.</div>
-          </div>
-        </div>
-        <div class="step-card">
-          <div class="step-num">3</div>
-          <div class="step-body">
-            <div class="step-title">Generate all pairings</div>
-            <div class="step-desc">All ways to form 3 pairs from 6 players are enumerated (15 pairings), then all 6 ways to assign those pairs to D1/D2/D3 are tried.</div>
-          </div>
-        </div>
-        <div class="step-card">
-          <div class="step-num">4</div>
-          <div class="step-body">
-            <div class="step-title">Score and rank</div>
-            <div class="step-desc">Each complete lineup is scored by summing the five line scores. The highest-scoring lineup is recommended; the next 4 are shown as alternatives.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="callout info">
-        <span class="callout-icon">&#9432;</span>
-        <div>The optimizer doesn't lock your best pair into D1. It tries every line assignment — sometimes your strongest pair scores better at D2 to exploit a favorable matchup there.</div>
-      </div>
-    </section>
-
-    <!-- SCORING -->
-    <section class="doc-section" id="scoring">
-      <h2 class="section-title"><span class="sec-icon">&#127919;</span> Scoring Breakdown</h2>
-      <div class="section-divider"></div>
-
-      <h3 class="subsection">Singles line score</h3>
-      <p>Starts from the player's base singles score, then adds:</p>
-      <ul>
-        <li><strong>(player rating − opponent rating) × 40</strong></li>
-        <li><strong>win% × 15</strong></li>
-      </ul>
-
-      <h3 class="subsection">Doubles partnership score</h3>
-      <table class="ftable">
-        <tr><th>Factor</th><th>Points</th></tr>
-        <tr><td>Avoid pair penalty</td><td>−120</td></tr>
-        <tr><td>Partnership win% × 50</td><td>0 – 50</td></tr>
-        <tr><td>Sample size bonus (max 8 matches × 3)</td><td>0 – 24</td></tr>
-        <tr><td>Trending up</td><td>+12</td></tr>
-        <tr><td>Trending down</td><td>−8</td></tr>
-        <tr><td>Perfect side fit (Ad + Deuce)</td><td>+18</td></tr>
-        <tr><td>One flexible player</td><td>+12</td></tr>
-        <tr><td>Both players same preferred side</td><td>−5</td></tr>
-        <tr><td>(Average rating − 3.5) × 30</td><td>varies</td></tr>
-        <tr><td>Average win% × 20</td><td>0 – 20</td></tr>
-      </table>
-
-      <h3 class="subsection">Doubles line score vs. opponent</h3>
-      <p><code>line score = partnership score + (team avg rating − opp avg rating) × 35</code></p>
-      <p>A pair with strong partnership history can overcome a small rating deficit — and a highly-rated pair with no track record may score lower than expected.</p>
-    </section>
-
-    <!-- TAGS -->
-    <section class="doc-section" id="tags">
-      <h2 class="section-title"><span class="sec-icon">&#127991;</span> Player Tags Reference</h2>
-      <div class="section-divider"></div>
-
-      <table class="ftable">
-        <tr><th>Tag</th><th>Meaning</th><th>How it's set</th></tr>
-        <tr><td><span class="tag tag-rating">3.72</span></td><td>USTA dynamic rating</td><td>Entered when adding the player</td></tr>
-        <tr><td><span class="tag tag-captain">CPT</span></td><td>Team captain</td><td>Set in player data</td></tr>
-        <tr><td><span class="tag tag-singles">Singles</span></td><td>Eligible for S1/S2</td><td>Primary Line = Singles or Both</td></tr>
-        <tr><td><span class="tag tag-ad">Ad</span></td><td>Prefers left court</td><td>Preferred Side = Ad</td></tr>
-        <tr><td><span class="tag tag-deuce">Deuce</span></td><td>Prefers right court</td><td>Preferred Side = Deuce</td></tr>
-        <tr><td><span class="tag tag-hot">Hot</span></td><td>≥70% win rate this season (3+ matches)</td><td>Calculated automatically from records</td></tr>
-        <tr><td><span class="tag tag-caution">Caution</span></td><td>≤30% win rate this season (3+ matches)</td><td>Calculated automatically from records</td></tr>
-        <tr><td><span class="tag tag-added">Added</span></td><td>Manually added player</td><td>Set when player is created via + Add Player</td></tr>
-      </table>
-    </section>
-
-    <!-- FAQ -->
-    <section class="doc-section" id="faq">
-      <h2 class="section-title"><span class="sec-icon">&#10067;</span> FAQ &amp; Tips</h2>
-      <div class="section-divider"></div>
-
-      <div class="faq-item">
-        <div class="faq-q">The Generate button is grayed out.</div>
-        <div class="faq-a">You need at least 8 players marked available. Check the count below the roster grid — it tells you exactly how many are selected.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">No players show up as singles candidates.</div>
-        <div class="faq-a">At least 2 players must have Primary Line set to <strong>Singles</strong> or <strong>Both</strong>. Edit their profiles via the player card's <span style="color:var(--gold)">ⓘ</span> info button, or remove and re-add them with the correct line setting.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">The optimizer puts a lower-rated pair at D1 — is that right?</div>
-        <div class="faq-a">Yes, sometimes. If the weakest opponent happens to be at D1, placing a mid-tier but proven pair there while saving your best for D2 can be the higher-scoring strategy overall.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">My players disappeared after clearing my browser.</div>
-        <div class="faq-a">All data is stored in localStorage, which is cleared when you clear your browser history or use private/incognito mode. For a permanent roster, the captain should bookmark the app on a dedicated device or export the lineup before clearing.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">Can multiple captains use this on different devices?</div>
-        <div class="faq-a">The app is single-device — there's no sync or cloud storage. The simplest workaround is to designate one device as the "captain's device" and always use that for the official lineup.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">Does the app send any data anywhere?</div>
-        <div class="faq-a">No. Everything runs in your browser. The only external requests are optional TennisRecord URL lookups (to fetch ratings), which go through a public CORS proxy. No player data is stored on any server.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">How do I update a player's rating mid-season?</div>
-        <div class="faq-a">Remove the player and re-add them with the updated rating and record. Their partnerships will need to be re-entered. For frequent updates, consider using the TennisRecord URL lookup when adding — it pulls the latest dynamic rating automatically.</div>
-      </div>
-    </section>
-
-  </main>
+  </div>
 </div>
 
-<button class="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">&#8679;</button>
+<div class="main">
+
+  <!-- STEP 1: AVAILABILITY -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title">WHO'S AVAILABLE?</div>
+    </div>
+    <div class="select-controls">
+      <button class="select-btn" onclick="selectAll()">Select All</button>
+      <button class="select-btn" onclick="selectNone()">Clear</button>
+      <button class="select-btn" onclick="toggleAvailPanel()" id="pasteAvailBtn">Paste Available</button>
+      <button class="add-player-btn" onclick="toggleAddPanel()">+ Add Player</button>
+      <button class="pship-btn" onclick="togglePshipPanel()">Partnerships</button>
+    </div>
+
+    <div class="paste-panel" id="availPanel">
+      <div class="pship-panel-title">PASTE AVAILABILITY</div>
+      <textarea class="paste-textarea" id="availText" placeholder="Paste from any source:
+
+• Simple name list (one per line) → marks those players available
+• USTA team availability page → select all, copy, paste here
+
+USTA format auto-detected: players marked Available/Yes will be checked in, Not Available/No will be checked out." style="min-height:120px"></textarea>
+      <div class="paste-hint">Works with USTA NorCal availability pages, GroupMe/text threads, or any name list. If availability status is detected, it's applied; otherwise all matched names are marked available.</div>
+      <div class="paste-actions">
+        <button class="paste-btn-cancel" onclick="toggleAvailPanel()">Cancel</button>
+        <button class="paste-btn-fill" onclick="fillFromAvail()">Set Availability</button>
+      </div>
+    </div>
+
+    <div class="add-panel" id="addPanel">
+      <div class="add-panel-title">ADD NEW PLAYER</div>
+      <div class="add-grid">
+        <div class="add-field" style="grid-column:1/-1">
+          <label class="add-label">TennisRecord URL (auto-fills name &amp; rating)</label>
+          <div class="url-lookup-row">
+            <input class="url-lookup-input" id="add_url" placeholder="https://www.tennisrecord.com/adult/profile.aspx?playername=...">
+            <button class="url-lookup-btn" id="addLookupBtn" onclick="lookupAddPlayerUrl()">Lookup</button>
+          </div>
+        </div>
+        <div class="add-field">
+          <label class="add-label">First Name</label>
+          <input class="add-input" id="add_fname" placeholder="Jane">
+        </div>
+        <div class="add-field">
+          <label class="add-label">Last Name</label>
+          <input class="add-input" id="add_lname" placeholder="Smith">
+        </div>
+        <div class="add-field">
+          <label class="add-label">Dynamic Rating</label>
+          <input class="add-input" id="add_rating" placeholder="3.70" type="number" step="0.01">
+        </div>
+        <div class="add-field">
+          <label class="add-label">Preferred Side</label>
+          <select class="add-select" id="add_side">
+            <option value="ad">Ad</option>
+            <option value="deuce">Deuce</option>
+            <option value="both">Flexible</option>
+          </select>
+        </div>
+        <div class="add-field">
+          <label class="add-label">Primary Line</label>
+          <select class="add-select" id="add_line">
+            <option value="doubles">Doubles</option>
+            <option value="singles">Singles</option>
+            <option value="both">Both</option>
+          </select>
+        </div>
+        <div class="add-field">
+          <label class="add-label">4.0 Win % (estimate)</label>
+          <input class="add-input" id="add_winpct" placeholder="50" type="number" step="1">
+        </div>
+        <div class="add-field">
+          <label class="add-label">2026 Wins</label>
+          <input class="add-input" id="add_w26" placeholder="0" type="number" step="1">
+        </div>
+        <div class="add-field">
+          <label class="add-label">2026 Losses</label>
+          <input class="add-input" id="add_l26" placeholder="0" type="number" step="1">
+        </div>
+      </div>
+      <div class="add-actions">
+        <button class="add-cancel" onclick="toggleAddPanel()">Cancel</button>
+        <button class="add-save" onclick="saveNewPlayer()">ADD TO ROSTER</button>
+      </div>
+    </div>
+
+    <div class="pship-panel" id="pshipPanel">
+      <div class="pship-panel-title">ADD / VIEW PARTNERSHIPS</div>
+      <div class="pship-form">
+        <div class="pship-field">
+          <label class="add-label">Player A</label>
+          <select class="add-select" id="pship_a"></select>
+        </div>
+        <div class="pship-field">
+          <label class="add-label">Player B</label>
+          <select class="add-select" id="pship_b"></select>
+        </div>
+        <div class="pship-field half">
+          <label class="add-label">Wins Together</label>
+          <input class="add-input" id="pship_w" placeholder="0" type="number" step="1">
+        </div>
+        <div class="pship-field half">
+          <label class="add-label">Losses Together</label>
+          <input class="add-input" id="pship_l" placeholder="0" type="number" step="1">
+        </div>
+        <div class="pship-field">
+          <label class="add-label">Trend</label>
+          <select class="add-select" id="pship_trend">
+            <option value="stable">Stable</option>
+            <option value="up">Trending Up</option>
+            <option value="down">Trending Down</option>
+          </select>
+        </div>
+        <div class="pship-field">
+          <label class="add-label">Notes (optional)</label>
+          <input class="add-input" id="pship_note" placeholder="e.g. Strong chemistry">
+        </div>
+      </div>
+      <div class="add-actions">
+        <button class="add-cancel" onclick="togglePshipPanel()">Close</button>
+        <button class="add-save" onclick="savePartnership()">SAVE PARTNERSHIP</button>
+      </div>
+      <div class="pship-list" id="pshipList"></div>
+    </div>
+
+    <div class="roster-grid" id="rosterGrid"></div>
+    <div class="player-count" id="playerCount"></div>
+  </div>
+
+  <!-- STEP 2: OPPONENT LINEUP -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title">OPPONENT LINEUP</div>
+    </div>
+
+    <div class="mode-toggle" style="margin-bottom:8px">
+      <button class="mode-btn active" onclick="setFormat('standard')" id="fmtStandard">2 Singles + 3 Doubles</button>
+      <button class="mode-btn" onclick="setFormat('short')" id="fmtShort">1 Singles + 2 Doubles</button>
+    </div>
+
+    <div class="mode-toggle">
+      <button class="mode-btn active" onclick="setMode('full')" id="modeFull">Full Scouting</button>
+      <button class="mode-btn" onclick="setMode('quick')" id="modeQuick">Quick (No Opponent Info)</button>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <button class="select-btn" onclick="togglePastePanel()" style="border-color:var(--gold);color:var(--gold);font-weight:600">Paste Opponent Roster</button>
+    </div>
+
+    <div class="paste-panel" id="pastePanel">
+      <div class="pship-panel-title">PASTE OPPONENT ROSTER</div>
+      <textarea class="paste-textarea" id="pasteText" placeholder="Paste any format — names and ratings will be detected automatically. Examples:
+
+Jane Smith 3.80
+Mary Jones 3.72
+S1: Alice Brown 3.75
+D1: Carol Davis 3.68 / Eve Wilson 3.65
+D2: Fiona Lee 3.62, Grace Kim 3.58"></textarea>
+      <div class="paste-hint">Tip: Paste names + ratings, position labels (S1, S2, D1...), or TennisRecord URLs — ratings will be fetched automatically.</div>
+      <div class="paste-actions">
+        <button class="paste-btn-cancel" onclick="togglePastePanel()">Cancel</button>
+        <button class="paste-btn-fill" onclick="fillFromPaste()">Fill Lineup</button>
+      </div>
+    </div>
+
+    <div id="oppForm" class="card">
+      <div class="opp-section">
+        <div class="opp-section-title"><span class="line-badge">S1</span> Singles 1</div>
+        <div class="opp-row">
+          <label>Name</label>
+          <input class="opp-input" id="opp_s1_name" placeholder="Opponent name (optional)">
+          <input class="opp-input rating-input" id="opp_s1_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_s1_link_btn" onclick="toggleOppUrl('s1',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_s1_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_s1_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('s1')">
+        </div>
+      </div>
+      <div id="oppS2Section">
+      <div class="opp-divider"></div>
+      <div class="opp-section">
+        <div class="opp-section-title"><span class="line-badge">S2</span> Singles 2</div>
+        <div class="opp-row">
+          <label>Name</label>
+          <input class="opp-input" id="opp_s2_name" placeholder="Opponent name (optional)">
+          <input class="opp-input rating-input" id="opp_s2_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_s2_link_btn" onclick="toggleOppUrl('s2',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_s2_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_s2_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('s2')">
+        </div>
+      </div>
+      </div>
+      <div class="opp-divider"></div>
+      <div class="opp-section">
+        <div class="opp-section-title"><span class="line-badge">D1</span> Doubles 1</div>
+        <div class="opp-row">
+          <label>P1</label>
+          <input class="opp-input" id="opp_d1_p1_name" placeholder="Player 1 name">
+          <input class="opp-input rating-input" id="opp_d1_p1_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_d1_p1_link_btn" onclick="toggleOppUrl('d1_p1',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_d1_p1_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_d1_p1_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d1_p1')">
+        </div>
+        <div class="opp-row">
+          <label>P2</label>
+          <input class="opp-input" id="opp_d1_p2_name" placeholder="Player 2 name">
+          <input class="opp-input rating-input" id="opp_d1_p2_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_d1_p2_link_btn" onclick="toggleOppUrl('d1_p2',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_d1_p2_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_d1_p2_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d1_p2')">
+        </div>
+      </div>
+      <div class="opp-divider"></div>
+      <div class="opp-section">
+        <div class="opp-section-title"><span class="line-badge">D2</span> Doubles 2</div>
+        <div class="opp-row">
+          <label>P1</label>
+          <input class="opp-input" id="opp_d2_p1_name" placeholder="Player 1 name">
+          <input class="opp-input rating-input" id="opp_d2_p1_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_d2_p1_link_btn" onclick="toggleOppUrl('d2_p1',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_d2_p1_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_d2_p1_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d2_p1')">
+        </div>
+        <div class="opp-row">
+          <label>P2</label>
+          <input class="opp-input" id="opp_d2_p2_name" placeholder="Player 2 name">
+          <input class="opp-input rating-input" id="opp_d2_p2_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_d2_p2_link_btn" onclick="toggleOppUrl('d2_p2',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_d2_p2_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_d2_p2_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d2_p2')">
+        </div>
+      </div>
+      <div id="oppD3Section">
+      <div class="opp-divider"></div>
+      <div class="opp-section">
+        <div class="opp-section-title"><span class="line-badge">D3</span> Doubles 3</div>
+        <div class="opp-row">
+          <label>P1</label>
+          <input class="opp-input" id="opp_d3_p1_name" placeholder="Player 1 name">
+          <input class="opp-input rating-input" id="opp_d3_p1_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_d3_p1_link_btn" onclick="toggleOppUrl('d3_p1',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_d3_p1_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_d3_p1_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d3_p1')">
+        </div>
+        <div class="opp-row">
+          <label>P2</label>
+          <input class="opp-input" id="opp_d3_p2_name" placeholder="Player 2 name">
+          <input class="opp-input rating-input" id="opp_d3_p2_rating" placeholder="Rating" type="number" step="0.01">
+          <button class="opp-link-btn" id="opp_d3_p2_link_btn" onclick="toggleOppUrl('d3_p2',event)" title="Add TennisRecord link">🔗</button>
+        </div>
+        <div class="opp-url-row" id="opp_d3_p2_url_row">
+          <span style="width:44px;flex-shrink:0"></span>
+          <input class="opp-url-input" id="opp_d3_p2_url" placeholder="TennisRecord URL (optional)" oninput="updateOppLinkBtn('d3_p2')">
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GENERATE -->
+  <div class="generate-wrap">
+    <button class="generate-btn" id="generateBtn" onclick="optimize()">
+      <span class="shimmer"></span>
+      GENERATE OPTIMAL LINEUP
+    </button>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results"></div>
+
+</div>
+
+<div class="pmodal-overlay" id="pmodalOverlay" onclick="closePModal(event)">
+  <div class="pmodal" id="pmodal">
+    <div class="pmodal-handle"></div>
+    <div class="pmodal-header">
+      <div class="pmodal-name" id="pmodal-name"></div>
+      <button class="pmodal-close" onclick="document.getElementById('pmodalOverlay').classList.remove('open')">&times;</button>
+    </div>
+    <div class="pmodal-badges" id="pmodal-badges"></div>
+    <div class="pmodal-body" id="pmodal-body"></div>
+  </div>
+</div>
+
+<div class="footer">Rafael RC Lineup Optimizer &middot; 2026 Spring 4.0 Women's &middot; 18 Players &nbsp;&nbsp;<a href="docs/" class="footer-docs-link">Documentation</a></div>
 
 <script>
-const sections = document.querySelectorAll('.doc-section');
-const links    = document.querySelectorAll('.sidebar-link');
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      links.forEach(l => l.classList.remove('active'));
-      const a = document.querySelector(`.sidebar-link[href="#${e.target.id}"]`);
-      if (a) a.classList.add('active');
+// ===================== DATA =====================
+const BASE_ROSTER = [
+  { id:"pham", name:"Christina Pham", rating:3.97, side:"both", line:"singles",
+    singlesCapable:true, captain:false,
+    record25:{w:15,l:9,note:"W 3.5+4.0"}, record26:{w:3,l:3,note:"W 3.5+4.0"},
+    winPct40:0.6, tags:[], singlesScore:67 },
+  { id:"hoffman", name:"Sarah Hoffman", rating:3.91, side:"ad", line:"doubles",
+    singlesCapable:false, captain:true,
+    record25:{w:10,l:5,note:"W 3.5+4.0"}, record26:{w:5,l:1,note:"W 3.5+4.0"},
+    winPct40:0.71, tags:["Captain","Hot"], singlesScore:35 },
+  { id:"javier", name:"Gina Javier", rating:3.8, side:"ad", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:3,l:4,note:"W 3.5+4.0"}, record26:{w:2,l:3,note:"W 3.5+4.0"},
+    winPct40:0.42, tags:[], singlesScore:20 },
+  { id:"mcgeehan", name:"Kelly McGeehan", rating:3.8, side:"deuce", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:8,l:10,note:"W 3.5+4.0"}, record26:{w:3,l:3,note:"W 3.5+4.0"},
+    winPct40:0.46, tags:[], singlesScore:30 },
+  { id:"thornton", name:"Kat Thornton", rating:3.72, side:"both", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:8,l:2,note:"W 3.5+4.0"}, record26:{w:0,l:1,note:"W 3.5+4.0"},
+    winPct40:0.73, tags:[], singlesScore:22 },
+  { id:"wear", name:"Margarita Wear", rating:3.87, side:"deuce", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:20,l:8,note:"W 3.5+4.0"}, record26:{w:4,l:6,note:"W 3.5+4.0"},
+    winPct40:0.63, tags:[], singlesScore:25 },
+  { id:"volpi", name:"Lauren Volpi", rating:3.71, side:"ad", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:19,l:12,note:"W 3.5+4.0"}, record26:{w:7,l:6,note:"W 3.5+4.0"},
+    winPct40:0.59, tags:[], singlesScore:30 },
+  { id:"burner", name:"Hayley Burner", rating:3.67, side:"deuce", line:"singles",
+    singlesCapable:true, captain:false,
+    record25:{w:34,l:11,note:"W 3.5+4.0"}, record26:{w:2,l:18,note:"W 3.5+4.0"},
+    winPct40:0.55, tags:["Singles Specialist","Caution"], singlesScore:65 },
+  { id:"klein", name:"Sharon Klein", rating:3.71, side:"ad", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:19,l:21,note:"W 3.5+4.0"}, record26:{w:4,l:7,note:"W 3.5+4.0"},
+    winPct40:0.45, tags:[], singlesScore:25 },
+  { id:"mcmillan", name:"Kate McMillan", rating:3.64, side:"deuce", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:0,l:0,note:"W 3.5+4.0"}, record26:{w:3,l:0,note:"W 3.5+4.0"},
+    winPct40:1.0, tags:["Breakout","Hot"], singlesScore:28 },
+  { id:"west", name:"Lauren West", rating:3.63, side:"both", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:7,l:8,note:"W 3.5+4.0"}, record26:{w:0,l:4,note:"W 3.5+4.0"},
+    winPct40:0.37, tags:["Caution"], singlesScore:20 },
+  { id:"rice", name:"Jennifer Rice", rating:3.59, side:"deuce", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:9,l:2,note:"W 3.5+4.0"}, record26:{w:3,l:4,note:"W 3.5+4.0"},
+    winPct40:0.67, tags:[], singlesScore:20 },
+  { id:"vincelette", name:"Melissa Vincelette", rating:3.58, side:"both", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:10,l:5,note:"W 3.5+4.0"}, record26:{w:5,l:1,note:"W 3.5+4.0"},
+    winPct40:0.71, tags:["Hot"], singlesScore:18 },
+  { id:"anderson", name:"Elizabeth Anderson", rating:3.47, side:"ad", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:10,l:4,note:"W 3.5+4.0"}, record26:{w:3,l:4,note:"W 3.5+4.0"},
+    winPct40:0.62, tags:[], singlesScore:18 },
+  { id:"pavia", name:"Meredith Pavia", rating:3.4, side:"deuce", line:"both",
+    singlesCapable:true, captain:false,
+    record25:{w:0,l:8,note:"W 3.5+4.0"}, record26:{w:2,l:6,note:"W 3.5+4.0"},
+    winPct40:0.12, tags:["Caution"], singlesScore:20 },
+  { id:"atherton", name:"Amy Atherton", rating:3.52, side:"ad", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:9,l:19,note:"W 3.5+4.0"}, record26:{w:1,l:5,note:"W 3.5+4.0"},
+    winPct40:0.29, tags:["Caution"], singlesScore:18 },
+  { id:"ezcurra", name:"Dee Ann Ezcurra", rating:3.5, side:"both", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:0,l:9,note:"W 3.5+4.0"}, record26:{w:0,l:2,note:"W 3.5+4.0"},
+    winPct40:0.0, tags:[], singlesScore:20 },
+  { id:"brook", name:"Joanna Brook", rating:3.57, side:"both", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:12,l:12,note:"W 3.5+4.0"}, record26:{w:5,l:9,note:"W 3.5+4.0"},
+    winPct40:0.45, tags:[], singlesScore:18 },
+  { id:"liu", name:"Angela Liu", rating:3.36, side:"deuce", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:4,l:7,note:"W 3.5+4.0"}, record26:{w:1,l:3,note:"W 3.5+4.0"},
+    winPct40:0.33, tags:["Pair w/ Rice Only","Caution"], singlesScore:10 },
+  { id:"hellyer", name:"Ashley Hellyer", rating:3.47, side:"ad", line:"singles",
+    singlesCapable:true, captain:false,
+    record25:{w:10,l:14,note:"W 3.5+4.0"}, record26:{w:5,l:6,note:"W 3.5+4.0"},
+    winPct40:0.43, tags:[], singlesScore:55 },
+  { id:"jacobson", name:"Petra Jacobson", rating:3.33, side:"deuce", line:"singles",
+    singlesCapable:true, captain:false,
+    record25:{w:12,l:11,note:"W 3.5+4.0"}, record26:{w:0,l:0,note:"No 2026 matches yet"},
+    winPct40:0.52, tags:[], singlesScore:52 },
+  { id:"finley", name:"Sarah Finley", rating:3.23, side:"ad", line:"singles",
+    singlesCapable:true, captain:false,
+    record25:{w:12,l:8,note:"W 3.5+4.0"}, record26:{w:2,l:3,note:"W 3.5+4.0"},
+    winPct40:0.56, tags:[], singlesScore:53 },
+  { id:"johnston", name:"Nhat Johnston", rating:3.2, side:"both", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:12,l:14,note:"W 3.5+4.0"}, record26:{w:4,l:4,note:"W 3.5+4.0"},
+    winPct40:0.47, tags:[], singlesScore:18 },
+  { id:"ginwala", name:"Susan Ginwala", rating:3.12, side:"both", line:"doubles",
+    singlesCapable:false, captain:false,
+    record25:{w:9,l:10,note:"W 3.5+4.0"}, record26:{w:2,l:4,note:"W 3.5+4.0"},
+    winPct40:0.44, tags:[], singlesScore:15 },
+  { id:"nardone", name:"Michelle Nardone", rating:3.09, side:"both", line:"singles",
+    singlesCapable:true, captain:false,
+    record25:{w:8,l:15,note:"W 3.5+4.0"}, record26:{w:2,l:8,note:"W 3.5+4.0"},
+    winPct40:0.3, tags:["Caution"], singlesScore:43 },
+  { id:"forst", name:"Amanda Forst", rating:3.09, side:"ad", line:"singles",
+    singlesCapable:true, captain:false,
+    record25:{w:5,l:12,note:"W 3.5+4.0"}, record26:{w:5,l:2,note:"W 3.5+4.0"},
+    winPct40:0.42, tags:["Hot"], singlesScore:52 },
+  { id:"alba", name:"Sarah Alba", rating:3.08, side:"deuce", line:"singles",
+    singlesCapable:true, captain:false,
+    record25:{w:11,l:10,note:"W 3.5+4.0"}, record26:{w:2,l:3,note:"W 3.5+4.0"},
+    winPct40:0.5, tags:[], singlesScore:40 },
+];
+
+const BASE_PARTNERSHIPS = [
+  { p:["mcmillan","mcgeehan"], w:2, l:0, note:"Dominant wins (6-4,6-1 & 6-4,6-1)", trending:"up" },
+  { p:["hoffman","klein"], w:2, l:0, note:"Excellent chemistry, untested in 2026", trending:"up" },
+  { p:["klein","wear"], w:5, l:1, note:"Strong — includes 6-1,6-1 blowout in 2026", trending:"up" },
+  { p:["volpi","wear"], w:5, l:2, note:"Reliable across both levels", trending:"up" },
+  { p:["hoffman","mcmillan"], w:1, l:0, note:"New pairing — gutsy 7-6,7-5 win", trending:"up" },
+  { p:["volpi","klein"], w:2, l:2, note:"Won last 2 after 0-2 start", trending:"stable" },
+  { p:["rice","liu"], w:4, l:3, note:"Declining from 3-1 to 4-3 combined", trending:"stable" },
+  { p:["wear","anderson"], w:6, l:2, note:"Proven chemistry over 8 matches", trending:"up" },
+  { p:["hoffman","wear"], w:0, l:0, note:"Complementary styles, untested", trending:"neutral", estimated:true },
+  { p:["hoffman","mcgeehan"], w:5, l:5, note:"Inconsistent — 50%, ceiling at 3.85 opp", trending:"stable" },
+];
+
+function loadPartnerships() {
+  const saved = JSON.parse(localStorage.getItem('rrc_custom_partnerships') || '[]');
+  return [...BASE_PARTNERSHIPS, ...saved];
+}
+function saveCustomPartnerships() {
+  const custom = PARTNERSHIPS.filter(p => p.custom);
+  localStorage.setItem('rrc_custom_partnerships', JSON.stringify(custom));
+}
+let PARTNERSHIPS = loadPartnerships();
+
+const AVOID = [
+  { p:["mcgeehan","klein"], w:0, l:2, reason:"Cannot close matches together" },
+  { p:["mcgeehan","volpi"], w:0, l:1, reason:"Lost 02/08, style mismatch" },
+  { p:["liu","*"], w:1, l:8, reason:"1-8 without Rice at 4.0", except:["rice"] },
+];
+
+const PAVIA_WARNING = "Meredith Pavia is 3-13 in Women's 3.5+4.0 across 2025-2026. High risk.";
+
+// ===================== ROSTER MANAGEMENT =====================
+// Merge base roster with any players saved in localStorage
+function loadRoster() {
+  const saved = JSON.parse(localStorage.getItem('rrc_added_players') || '[]');
+  const baseIds = new Set(BASE_ROSTER.map(p => p.id));
+  // Filter out any saved players whose name matches a BASE_ROSTER entry (catches old adds)
+  const baseNames = new Set(BASE_ROSTER.map(p => p.name.toLowerCase()));
+  const newSaved = saved.filter(p => !baseIds.has(p.id) && !baseNames.has(p.name.toLowerCase()));
+  return [...BASE_ROSTER, ...newSaved];
+}
+function saveAddedPlayers() {
+  const added = ROSTER.filter(p => p.added);
+  localStorage.setItem('rrc_added_players', JSON.stringify(added));
+}
+let ROSTER = loadRoster();
+
+// ===================== STATE =====================
+let available = new Set(ROSTER.map(p => p.id));
+let mode = "full";
+let format = "standard"; // "standard" = 2S+3D, "short" = 1S+2D
+const oppUrlCache = {}; // url → { record:{w,l}, adultWinPct }
+const _oppFetchTimers = {};
+
+// ===================== UI INIT =====================
+function init() {
+  renderRoster();
+  updateCount();
+}
+
+function toggleAddPanel() {
+  const panel = document.getElementById('addPanel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) {
+    document.getElementById('add_fname').focus();
+  }
+}
+
+function saveNewPlayer() {
+  const fname = document.getElementById('add_fname').value.trim();
+  const lname = document.getElementById('add_lname').value.trim();
+  const rating = parseFloat(document.getElementById('add_rating').value) || 3.50;
+  const side = document.getElementById('add_side').value;
+  const line = document.getElementById('add_line').value;
+  const winpct = (parseInt(document.getElementById('add_winpct').value) || 50) / 100;
+  const w26 = parseInt(document.getElementById('add_w26').value) || 0;
+  const l26 = parseInt(document.getElementById('add_l26').value) || 0;
+
+  if (!fname || !lname) { alert('Please enter first and last name.'); return; }
+
+  const id = (fname + lname).toLowerCase().replace(/[^a-z]/g, '') + '_' + Date.now();
+  const singlesCapable = (line === 'singles' || line === 'both');
+  const singlesScore = singlesCapable ? Math.round(20 + rating * 10 + winpct * 20) : Math.round(10 + rating * 5);
+
+  const newPlayer = {
+    id, name: `${fname} ${lname}`, rating, side, line,
+    singlesCapable, captain: false, added: true,
+    record25: { w:0, l:0, note:"New player" },
+    record26: { w:w26, l:l26, note: w26+l26 > 0 ? `${w26}-${l26}` : "No data" },
+    winPct40: winpct,
+    tags: ["New"],
+    singlesScore
+  };
+
+  ROSTER.push(newPlayer);
+  available.add(id);
+  saveAddedPlayers();
+
+  // Clear form
+  ['add_fname','add_lname','add_rating','add_winpct','add_w26','add_l26'].forEach(f => document.getElementById(f).value = '');
+  document.getElementById('add_side').value = 'ad';
+  document.getElementById('add_line').value = 'doubles';
+  toggleAddPanel();
+
+  renderRoster();
+  updateCount();
+}
+
+function removePlayer(id, e) {
+  e.stopPropagation();
+  if (!confirm('Remove this player from the roster?')) return;
+  // Also remove any custom partnerships involving this player
+  PARTNERSHIPS = PARTNERSHIPS.filter(ps => !(ps.custom && (ps.p[0] === id || ps.p[1] === id)));
+  saveCustomPartnerships();
+  ROSTER.splice(ROSTER.findIndex(p => p.id === id), 1);
+  available.delete(id);
+  saveAddedPlayers();
+  renderRoster();
+  updateCount();
+}
+
+// ===================== PARTNERSHIP MANAGEMENT =====================
+function togglePshipPanel() {
+  const panel = document.getElementById('pshipPanel');
+  const isOpening = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  if (isOpening) {
+    populatePshipDropdowns();
+    renderPshipList();
+  }
+}
+
+function populatePshipDropdowns() {
+  const optionsHTML = ROSTER.map(p =>
+    `<option value="${p.id}">${p.name} (${p.rating.toFixed(2)})</option>`
+  ).join('');
+  document.getElementById('pship_a').innerHTML = optionsHTML;
+  document.getElementById('pship_b').innerHTML = optionsHTML;
+  // Default Player B to second player so they aren't the same
+  if (ROSTER.length > 1) document.getElementById('pship_b').selectedIndex = 1;
+}
+
+function savePartnership() {
+  const idA = document.getElementById('pship_a').value;
+  const idB = document.getElementById('pship_b').value;
+  const w = parseInt(document.getElementById('pship_w').value) || 0;
+  const l = parseInt(document.getElementById('pship_l').value) || 0;
+  const trending = document.getElementById('pship_trend').value;
+  const note = document.getElementById('pship_note').value.trim();
+
+  if (idA === idB) { alert('Please select two different players.'); return; }
+  if (w === 0 && l === 0) { alert('Please enter at least one win or loss.'); return; }
+
+  // Check if partnership already exists (base or custom)
+  const existingIdx = PARTNERSHIPS.findIndex(ps =>
+    (ps.p[0] === idA && ps.p[1] === idB) || (ps.p[0] === idB && ps.p[1] === idA)
+  );
+
+  if (existingIdx !== -1) {
+    const existing = PARTNERSHIPS[existingIdx];
+    if (!existing.custom) {
+      // It's a base partnership — confirm overriding
+      const pA = ROSTER.find(r => r.id === idA);
+      const pB = ROSTER.find(r => r.id === idB);
+      if (!confirm(`${pA.name} + ${pB.name} already has built-in data (${existing.w}-${existing.l}). Replace with your data?`)) return;
+      // Mark the base one as overridden by adding a custom one on top
+      PARTNERSHIPS.splice(existingIdx, 1);
+    } else {
+      // Replace the existing custom entry
+      PARTNERSHIPS.splice(existingIdx, 1);
+    }
+  }
+
+  PARTNERSHIPS.push({
+    p: [idA, idB], w, l, note: note || '', trending, custom: true
+  });
+
+  saveCustomPartnerships();
+
+  // Clear form
+  document.getElementById('pship_w').value = '';
+  document.getElementById('pship_l').value = '';
+  document.getElementById('pship_note').value = '';
+  document.getElementById('pship_trend').value = 'stable';
+
+  renderPshipList();
+}
+
+function removePship(idx, e) {
+  e.stopPropagation();
+  const ps = PARTNERSHIPS[idx];
+  if (!ps.custom) {
+    alert('Built-in partnerships cannot be deleted. Add a custom entry to override it.');
+    return;
+  }
+  PARTNERSHIPS.splice(idx, 1);
+  saveCustomPartnerships();
+  renderPshipList();
+}
+
+function renderPshipList() {
+  const container = document.getElementById('pshipList');
+  const allPships = PARTNERSHIPS;
+
+  if (allPships.length === 0) {
+    container.innerHTML = '<div class="pship-empty">No partnerships recorded yet.</div>';
+    return;
+  }
+
+  const trendIcon = t => t === 'up' ? '&#9650;' : t === 'down' ? '&#9660;' : '&#9679;';
+  const trendColor = t => t === 'up' ? '#059669' : t === 'down' ? '#EF4444' : '#9CA3AF';
+
+  let html = '<div class="pship-list-title">All Partnerships (' + allPships.length + ')</div>';
+  allPships.forEach((ps, i) => {
+    const pA = ROSTER.find(r => r.id === ps.p[0]);
+    const pB = ROSTER.find(r => r.id === ps.p[1]);
+    if (!pA || !pB) return; // player was removed
+    const total = ps.w + ps.l;
+    const pct = total > 0 ? Math.round((ps.w / total) * 100) : 0;
+    const recClass = pct >= 65 ? 'good' : pct >= 40 ? 'ok' : 'bad';
+    const nameA = pA.name.split(' ').pop();
+    const nameB = pB.name.split(' ').pop();
+    const customBadge = ps.custom ? ' <span style="font-size:9px;color:#6366F1;font-weight:600">CUSTOM</span>' : '';
+    const delBtn = ps.custom
+      ? `<button class="pship-item-del" onclick="removePship(${i}, event)" title="Remove">&times;</button>`
+      : '';
+
+    html += `
+      <div class="pship-item">
+        <div class="pship-item-names">${nameA} + ${nameB}${customBadge}</div>
+        <div class="pship-item-record ${recClass}">${ps.w}-${ps.l} (${pct}%)</div>
+        <span class="pship-item-trend" style="color:${trendColor(ps.trending)}">${trendIcon(ps.trending)}</span>
+        ${delBtn}
+      </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function renderRoster() {
+  const grid = document.getElementById('rosterGrid');
+  grid.innerHTML = ROSTER.map(p => {
+    const checked = available.has(p.id);
+    const total25 = p.record25.w + p.record25.l;
+    const total26 = p.record26.w + p.record26.l;
+    const pct26 = total26 > 0 ? Math.round((p.record26.w / total26) * 100) : null;
+    let tagsHTML = `<span class="player-tag tag-rating">${p.rating.toFixed(2)}</span>`;
+    if (p.captain) tagsHTML += `<span class="player-tag tag-captain">CPT</span>`;
+    if (p.line === 'singles') tagsHTML += `<span class="player-tag tag-singles">Singles</span>`;
+    if (p.side === 'ad') tagsHTML += `<span class="player-tag tag-ad">Ad</span>`;
+    else if (p.side === 'deuce') tagsHTML += `<span class="player-tag tag-deuce">Deuce</span>`;
+    else tagsHTML += `<span class="player-tag tag-ad">Flex</span>`;
+    if (p.id === 'pavia') tagsHTML += `<span class="player-tag tag-warn">Caution</span>`;
+    if (p.id === 'mcmillan') tagsHTML += `<span class="player-tag tag-hot">Hot</span>`;
+    if (p.id === 'klein' && p.record26.w >= 3) tagsHTML += `<span class="player-tag tag-hot">Improving</span>`;
+    if (p.tags && p.tags.includes("New") && !p.added) tagsHTML += `<span class="player-tag" style="background:#6366F122;color:#6366F1">New</span>`;
+    if (p.added) tagsHTML += `<span class="player-tag" style="background:#6366F122;color:#6366F1">Added</span>`;
+
+    const recText = total26 > 0 ? `2026: ${p.record26.w}-${p.record26.l}` + (pct26 !== null ? ` (${pct26}%)` : '') : '2026: No data';
+
+    const removeBtn = p.added ? `<button class="remove-btn" onclick="removePlayer('${p.id}', event)" title="Remove player">&times;</button>` : '';
+
+    return `
+      <div class="player-row ${checked ? 'checked' : 'unavailable'} ${p.added ? 'added' : ''}" onclick="togglePlayer('${p.id}', this)" id="row_${p.id}">
+        <input type="checkbox" ${checked ? 'checked' : ''} id="cb_${p.id}">
+        <div class="player-check">${checked ? '&#10003;' : ''}</div>
+        <div class="player-info">
+          <div class="player-name player-name-link" onclick="openPlayerModal('${p.id}',event)">${p.name} <span class="pinfo-icon">ⓘ</span></div>
+          <div class="player-meta">${tagsHTML}</div>
+          <div class="player-meta" style="margin-top:3px;font-size:10px;color:var(--text-light)">${recText}</div>
+        </div>
+        ${removeBtn}
+      </div>`;
+  }).join('');
+}
+
+function togglePlayer(id, row) {
+  if (available.has(id)) { available.delete(id); }
+  else { available.add(id); }
+  const checked = available.has(id);
+  row.classList.toggle('checked', checked);
+  row.classList.toggle('unavailable', !checked);
+  row.querySelector('.player-check').innerHTML = checked ? '&#10003;' : '';
+  updateCount();
+}
+
+function selectAll() { ROSTER.forEach(p => available.add(p.id)); renderRoster(); updateCount(); }
+function selectNone() { available.clear(); renderRoster(); updateCount(); }
+
+function toggleAvailPanel() {
+  const panel = document.getElementById('availPanel');
+  panel.classList.toggle('open');
+  if (panel.classList.contains('open')) document.getElementById('availText').focus();
+}
+
+function matchRosterName(namePart) {
+  // Normalize: strip non-alpha, handle "Last, First" → "First Last"
+  const norm = namePart.replace(/,\s*(\S)/g, ' $1').toLowerCase().replace(/[^a-z\s]/g, '').replace(/\s+/g, ' ').trim();
+  const words = norm.split(' ').filter(w => w.length >= 2);
+  if (!words.length) return null;
+  return ROSTER.find(p => {
+    const full = p.name.toLowerCase();
+    if (full === norm) return true;
+    const parts = full.split(' ');
+    const last  = parts[parts.length - 1];
+    const first = parts[0];
+    return words.includes(last) || (first.length >= 3 && words.includes(first));
+  }) || null;
+}
+
+function parseAvailabilityPaste(text) {
+  // Returns { entries: [{name, isAvailable}], hasStatusInfo }
+  // Handles: plain name lists, USTA table format, tab-separated tables with Y/N/Available/etc.
+  const AVAIL_YES = /^(available|yes|y|a|✓|✔|☑)$/i;
+  const AVAIL_NO  = /^(unavailable|not available|no|n|na|n\/a|✗|✘|☒)$/i;
+
+  let hasStatusInfo = false;
+  const entries = [];
+
+  // Split into lines, then each line into tab-separated cells
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // Detect if this looks like a multi-column USTA date table:
+  // header row with multiple date columns → find which column to use
+  // e.g. "Player  NTRP  4/15  4/22  5/6"
+  // Strategy: pick the FIRST date column that has any Y/yes entries (most upcoming match)
+  let dateColIndex = -1;
+  const headerLine = lines.find(l => /\bntrp\b|\brating\b/i.test(l));
+  if (headerLine) {
+    const cols = headerLine.split('\t');
+    const dateCol = cols.findIndex(c => /\d{1,2}[\/\-]\d{1,2}/.test(c));
+    if (dateCol >= 0) dateColIndex = dateCol;
+  }
+
+  for (const line of lines) {
+    // Skip obvious header / non-player lines
+    if (/^(player|name|ntrp|rating|team|league|match date|roster|availability|week|round|home|away|location|court|#)/i.test(line)) continue;
+    if (/^\d{1,2}[\/\-]\d{1,2}/.test(line) && !/[a-zA-Z]{3,}/.test(line)) continue; // date-only lines
+    if (line.length > 120) continue;
+
+    const cells = line.split('\t').map(c => c.trim()).filter(c => c !== '');
+
+    let name = '';
+    let statusFound = null;
+
+    if (cells.length >= 2) {
+      // Tab-separated row: find the name cell and status cell
+      for (let i = 0; i < cells.length; i++) {
+        const c = cells[i];
+        // Priority: if we know the date column index, use that cell for status
+        if (dateColIndex >= 0 && i === dateColIndex) {
+          if (AVAIL_YES.test(c)) { statusFound = true;  hasStatusInfo = true; }
+          else if (AVAIL_NO.test(c) || c === '') { statusFound = false; hasStatusInfo = true; }
+          continue;
+        }
+        if (AVAIL_YES.test(c))           { statusFound = true;  hasStatusInfo = true; continue; }
+        if (AVAIL_NO.test(c))            { statusFound = false; hasStatusInfo = true; continue; }
+        if (/^[34]\.\d+$/.test(c))        continue; // skip ratings
+        if (/^\d{1,2}$/.test(c))          continue; // skip numbers
+        if (/^\d{1,2}[\/\-]\d{1,2}/.test(c)) continue; // skip dates in cells
+        if (!name && c.length >= 3 && /[a-zA-Z]{2}/.test(c)) name = c;
+      }
+    } else {
+      // Single-column line: may contain name + status keywords inline
+      let raw = line;
+      if (/\bunavailable\b/i.test(raw) || /\bnot available\b/i.test(raw)) {
+        statusFound = false; hasStatusInfo = true;
+        raw = raw.replace(/\bnot available\b/gi, '').replace(/\bunavailable\b/gi, '');
+      } else if (/\bavailable\b/i.test(raw)) {
+        statusFound = true; hasStatusInfo = true;
+        raw = raw.replace(/\bavailable\b/gi, '');
+      } else if (/\byes\b/i.test(raw)) {
+        statusFound = true; hasStatusInfo = true;
+        raw = raw.replace(/\byes\b/gi, '');
+      } else if (/\bno\b/i.test(raw)) {
+        // "No" is common in names ("Noriko"), so only treat as status if isolated
+        if (/^\s*no\s*$/i.test(raw) || /\bno\b.*$/i.test(raw.replace(/[a-zA-Z]{4,}/g, ''))) {
+          statusFound = false; hasStatusInfo = true;
+          raw = raw.replace(/\bno\b/gi, '');
+        }
+      }
+      // Strip ratings, numbers, special chars
+      raw = raw.replace(/[34]\.\d+/g, '').replace(/[✓✔☑✗✘☒]/g, '').replace(/\s+/g, ' ').trim();
+      if (raw.length >= 3) name = raw;
+    }
+
+    if (!name) continue;
+    const isAvailable = statusFound !== null ? statusFound : true;
+    entries.push({ name, isAvailable });
+  }
+
+  return { entries, hasStatusInfo };
+}
+
+function fillFromAvail() {
+  const text = document.getElementById('availText').value.trim();
+  if (!text) return;
+
+  const { entries, hasStatusInfo } = parseAvailabilityPaste(text);
+
+  available.clear();
+  let markedAvail = 0, markedUnavail = 0;
+  const unmatched = [];
+
+  for (const { name, isAvailable } of entries) {
+    const found = matchRosterName(name);
+    if (!found) {
+      if (name.length >= 4 && /[a-zA-Z]{3}/.test(name)) unmatched.push(name);
+      continue;
+    }
+    if (isAvailable) { available.add(found.id); markedAvail++; }
+    else markedUnavail++;
+  }
+
+  renderRoster();
+  updateCount();
+  toggleAvailPanel();
+  document.getElementById('availText').value = '';
+
+  let msg;
+  if (hasStatusInfo) {
+    msg = `${markedAvail} available, ${markedUnavail} unavailable`;
+  } else {
+    msg = `${markedAvail} player${markedAvail !== 1 ? 's' : ''} matched`;
+  }
+  if (unmatched.length) msg += `. Not found: ${unmatched.slice(0,3).join(', ')}${unmatched.length > 3 ? '…' : ''}`;
+  showAvailToast(msg, unmatched.length > 0);
+}
+
+function copyAvailable() {
+  const names = ROSTER.filter(p => available.has(p.id)).map(p => p.name).join('\n');
+  if (!names) return;
+  navigator.clipboard.writeText(names).then(() => {
+    const btn = document.getElementById('copyAvailBtn');
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+  });
+}
+
+function showAvailToast(msg, warn) {
+  let t = document.getElementById('availToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'availToast';
+    t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--navy);color:var(--white);font-size:13px;font-weight:500;padding:10px 18px;border-radius:20px;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:9999;transition:opacity .3s;white-space:nowrap;max-width:90vw;text-align:center';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.borderLeft = warn ? '3px solid var(--amber)' : '3px solid var(--green)';
+  t.style.opacity = '1';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity = '0'; }, 3500);
+}
+
+function closePModal(event) {
+  if (event.target === document.getElementById('pmodalOverlay')) {
+    document.getElementById('pmodalOverlay').classList.remove('open');
+  }
+}
+
+function openPlayerModal(id, event) {
+  event.stopPropagation();
+  const p = ROSTER.find(x => x.id === id);
+  if (!p) return;
+
+  const total25 = p.record25.w + p.record25.l;
+  const total26 = p.record26.w + p.record26.l;
+  const pct25 = total25 > 0 ? Math.round((p.record25.w / total25) * 100) : null;
+  const pct26 = total26 > 0 ? Math.round((p.record26.w / total26) * 100) : null;
+  const winsAll = p.record25.w + p.record26.w;
+  const totalAll = total25 + total26;
+  const pctAll = totalAll > 0 ? Math.round((winsAll / totalAll) * 100) : null;
+
+  // Header name
+  document.getElementById('pmodal-name').textContent = p.name;
+
+  // Badges
+  let badges = `<span class="player-tag tag-rating">${p.rating.toFixed(2)}</span>`;
+  if (p.captain) badges += `<span class="player-tag tag-captain">Captain</span>`;
+  if (p.line === 'singles') badges += `<span class="player-tag tag-singles">Singles</span>`;
+  else if (p.line === 'both') badges += `<span class="player-tag tag-singles">S+D</span>`;
+  if (p.side === 'ad') badges += `<span class="player-tag tag-ad">Ad Side</span>`;
+  else if (p.side === 'deuce') badges += `<span class="player-tag tag-deuce">Deuce Side</span>`;
+  else badges += `<span class="player-tag tag-ad">Flex</span>`;
+  (p.tags||[]).forEach(t => {
+    if (t === 'Hot') badges += `<span class="player-tag tag-hot">Hot</span>`;
+    else if (t === 'Caution') badges += `<span class="player-tag tag-warn">Caution</span>`;
+    else if (t === 'Captain') {}
+    else if (t !== 'New' && t !== 'Added') badges += `<span class="player-tag" style="background:#6366F122;color:#6366F1">${t}</span>`;
+  });
+  if (!p.tags.includes('Hot') && pct26 !== null && pct26 >= 65 && total26 >= 3)
+    badges += `<span class="player-tag tag-hot">Hot in 2026</span>`;
+  if (!p.tags.includes('Caution') && pct26 !== null && pct26 <= 30 && total26 >= 4)
+    badges += `<span class="player-tag tag-warn">Struggling</span>`;
+  document.getElementById('pmodal-badges').innerHTML = badges;
+
+  // Body
+  let html = '';
+
+  // Season stats
+  html += `<div class="pmodal-sec-title">Season Records — W 3.5+4.0 Only</div>
+  <div class="pmodal-stats">
+    <div class="pmodal-stat">
+      <div class="pmodal-stat-val">${total26 > 0 ? p.record26.w+'-'+p.record26.l : '—'}</div>
+      <div class="pmodal-stat-lbl">2026${pct26 !== null ? ' · '+pct26+'%' : ''}</div>
+    </div>
+    <div class="pmodal-stat">
+      <div class="pmodal-stat-val">${total25 > 0 ? p.record25.w+'-'+p.record25.l : '—'}</div>
+      <div class="pmodal-stat-lbl">2025${pct25 !== null ? ' · '+pct25+'%' : ''}</div>
+    </div>
+    <div class="pmodal-stat">
+      <div class="pmodal-stat-val">${pctAll !== null ? pctAll+'%' : '—'}</div>
+      <div class="pmodal-stat-lbl">Career W%</div>
+    </div>
+  </div>`;
+
+  // Partnerships
+  const pships = PARTNERSHIPS.filter(ps => ps.p.includes(p.id) && !ps.estimated);
+  if (pships.length > 0) {
+    html += `<div class="pmodal-divider"></div><div class="pmodal-sec-title">Partnership History</div>`;
+    pships.forEach(ps => {
+      const pid = ps.p.find(x => x !== p.id);
+      const partner = ROSTER.find(x => x.id === pid);
+      const pname = partner ? partner.name.split(' ')[0] : pid;
+      const tot = ps.w + ps.l;
+      const pp = tot > 0 ? Math.round((ps.w/tot)*100) : 0;
+      const cls = pp >= 60 ? 'good' : pp >= 40 ? 'ok' : 'bad';
+      const arrow = ps.trending === 'up' ? '↑' : ps.trending === 'down' ? '↓' : '→';
+      html += `<div class="pmodal-pship">
+        <div class="pmodal-pship-name">${pname}</div>
+        <div class="pmodal-pship-note">${ps.note}</div>
+        <div class="pmodal-pship-rec pship-item-record ${cls}">${ps.w}-${ps.l}</div>
+        <div style="font-size:13px">${arrow}</div>
+      </div>`;
+    });
+  }
+
+  // Patterns
+  const patterns = [];
+
+  if (pct26 !== null && pct26 >= 65 && total26 >= 3)
+    patterns.push({ icon:'🔥', text:`Hot form — ${p.record26.w}-${p.record26.l} (${pct26}%) in 2026` });
+  else if (pct26 !== null && pct26 <= 33 && total26 >= 4)
+    patterns.push({ icon:'⚠️', text:`Struggling in 2026 — ${p.record26.w}-${p.record26.l} (${pct26}%)` });
+  else if (total26 === 0)
+    patterns.push({ icon:'ℹ️', text:'No 2026 women\'s 3.5/4.0 matches yet this season' });
+
+  if (pct25 !== null && pct25 >= 65 && total25 >= 5)
+    patterns.push({ icon:'📈', text:`Strong 2025 season — ${p.record25.w}-${p.record25.l} (${pct25}%)` });
+  else if (pct25 !== null && pct25 <= 35 && total25 >= 6)
+    patterns.push({ icon:'📉', text:`Difficult 2025 — ${p.record25.w}-${p.record25.l} (${pct25}%)` });
+
+  if (p.side === 'ad') patterns.push({ icon:'🎾', text:'Ad-side specialist — place on the left court' });
+  else if (p.side === 'deuce') patterns.push({ icon:'🎾', text:'Deuce-side specialist — place on the right court' });
+  else patterns.push({ icon:'🔄', text:'Flexible — can play either side' });
+
+  if (p.singlesCapable && p.singlesScore >= 60)
+    patterns.push({ icon:'⭐', text:`Strong singles option (score: ${p.singlesScore})` });
+  else if (p.singlesCapable)
+    patterns.push({ icon:'✓', text:`Singles-capable if needed` });
+
+  if (p.rating >= 3.85)
+    patterns.push({ icon:'💪', text:`Top-rated (${p.rating.toFixed(2)}) — anchor your lineup around her` });
+  else if (p.rating <= 3.20)
+    patterns.push({ icon:'ℹ️', text:`Lower rating (${p.rating.toFixed(2)}) — pair with higher-rated partner` });
+
+  const avoids = AVOID.filter(a => a.p[0] === p.id || (a.p[1] !== '*' && a.p[1] === p.id));
+  avoids.forEach(a => {
+    const pid = a.p[0] === p.id ? a.p[1] : a.p[0];
+    if (pid === '*') {
+      patterns.push({ icon:'🚫', text:a.reason });
+    } else {
+      const pname = ROSTER.find(x => x.id === pid)?.name.split(' ')[0] || pid;
+      patterns.push({ icon:'🚫', text:`Avoid with ${pname} — ${a.reason}` });
     }
   });
-}, { rootMargin: '-20% 0px -70% 0px' });
-sections.forEach(s => obs.observe(s));
+
+  if (patterns.length > 0) {
+    html += `<div class="pmodal-divider"></div><div class="pmodal-sec-title">Player Patterns</div>`;
+    patterns.forEach(pt => {
+      html += `<div class="pmodal-pattern">${pt.icon} ${pt.text}</div>`;
+    });
+  }
+
+  document.getElementById('pmodal-body').innerHTML = html;
+  document.getElementById('pmodalOverlay').classList.add('open');
+}
+
+function updateCount() {
+  const n   = available.size;
+  const min = format === 'short' ? 5 : 8;
+  const el  = document.getElementById('playerCount');
+  const ok  = n >= min;
+  el.className = 'player-count' + (ok ? '' : ' insufficient');
+  el.innerHTML = `<strong>${n}</strong> players available` + (ok ? ' — ready to generate' : ` — need at least ${min}`);
+  document.getElementById('generateBtn').disabled = n < min;
+}
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('modeFull').classList.toggle('active', m === 'full');
+  document.getElementById('modeQuick').classList.toggle('active', m === 'quick');
+  document.getElementById('oppForm').style.display = m === 'full' ? 'block' : 'none';
+}
+
+function setFormat(f) {
+  format = f;
+  document.getElementById('fmtStandard').classList.toggle('active', f === 'standard');
+  document.getElementById('fmtShort').classList.toggle('active', f === 'short');
+  const hide = f === 'short';
+  document.getElementById('oppS2Section').style.display = hide ? 'none' : 'block';
+  document.getElementById('oppD3Section').style.display = hide ? 'none' : 'block';
+  updateCount();
+  const results = document.getElementById('results');
+  results.classList.remove('visible');
+  results.innerHTML = '';
+}
+
+// ===================== ALGORITHM =====================
+function getPartnership(id1, id2) {
+  // Search in reverse so custom entries (appended later) override base ones
+  for (let i = PARTNERSHIPS.length - 1; i >= 0; i--) {
+    const p = PARTNERSHIPS[i];
+    if ((p.p[0] === id1 && p.p[1] === id2) || (p.p[0] === id2 && p.p[1] === id1)) return p;
+  }
+  return null;
+}
+
+function isAvoided(id1, id2) {
+  for (const a of AVOID) {
+    if (a.p.includes('*')) {
+      const fixed = a.p.find(x => x !== '*');
+      const other = (id1 === fixed) ? id2 : (id2 === fixed ? id1 : null);
+      if (other && a.except && !a.except.includes(other)) return a;
+      if (other && !a.except) return a;
+    } else {
+      if ((a.p[0]===id1 && a.p[1]===id2)||(a.p[0]===id2 && a.p[1]===id1)) return a;
+    }
+  }
+  return null;
+}
+
+function lineAdjWinPct(player) {
+  // Normalize a player's raw win% by the typical opponent strength at their line.
+  // Higher-rated players play Line 1 and face tougher opponents, deflating their raw win%.
+  // Lower-rated players play Line 3 against easier opponents, inflating their raw win%.
+  // Adjustment: for every 0.10 rating above the team average, add ~7.5% to win%.
+  const raw = player.winPct40 || 0;
+  const teamAvg = ROSTER.reduce((s, p) => s + p.rating, 0) / ROSTER.length;
+  const adj = (player.rating - teamAvg) * 0.75;
+  return Math.min(0.95, Math.max(0.05, raw + adj));
+}
+
+function scorePartnership(id1, id2) {
+  const p = getPartnership(id1, id2);
+  const avoid = isAvoided(id1, id2);
+  let score = 0;
+  if (avoid) score -= 120;
+  if (p) {
+    const total = p.w + p.l;
+    const pct = total > 0 ? p.w / total : 0;
+    score += pct * 50;
+    score += Math.min(total, 8) * 3; // sample size bonus, capped
+    if (p.trending === 'up') score += 12;
+    if (p.trending === 'down') score -= 8;
+  }
+  // Side compatibility
+  const p1 = ROSTER.find(r => r.id === id1);
+  const p2 = ROSTER.find(r => r.id === id2);
+  const sides = [p1.side, p2.side];
+  if (sides.includes('ad') && sides.includes('deuce')) score += 18;
+  else if (sides.includes('both')) score += 12;
+  else if (sides[0] === sides[1]) score -= 5;
+  // Combined rating
+  score += ((p1.rating + p2.rating) / 2 - 3.5) * 30;
+  // Line-adjusted win% bonus (normalizes for opponent strength at each line)
+  score += ((lineAdjWinPct(p1) + lineAdjWinPct(p2)) / 2) * 20;
+  // Pavia penalty
+  if (id1 === 'pavia' || id2 === 'pavia') score -= 60;
+  return score;
+}
+
+function scoreSingles(playerId, oppRating, oppAdultWinPct) {
+  const p = ROSTER.find(r => r.id === playerId);
+  let score = p.singlesScore;
+  if (oppRating) score += (p.rating - oppRating) * 40;
+  // Line-adjusted win% (normalizes for opponent strength at each line)
+  score += lineAdjWinPct(p) * 15;
+  // Quality-of-competition adjustment: opponent's adult-only win rate
+  if (oppAdultWinPct != null) score -= (oppAdultWinPct - 0.5) * 25;
+  if (p.id === 'pavia') score -= 50;
+  return score;
+}
+
+function scoreDoublesVsOpp(id1, id2, oppAvgRating, oppAvgAdultWinPct) {
+  const p1 = ROSTER.find(r => r.id === id1);
+  const p2 = ROSTER.find(r => r.id === id2);
+  const teamAvg = (p1.rating + p2.rating) / 2;
+  let score = scorePartnership(id1, id2);
+  if (oppAvgRating) score += (teamAvg - oppAvgRating) * 35;
+  // Quality-of-competition adjustment
+  if (oppAvgAdultWinPct != null) score -= (oppAvgAdultWinPct - 0.5) * 20;
+  return score;
+}
+
+function generatePairings(players) {
+  if (players.length === 0) return [[]];
+  if (players.length < 2) return [];
+  const first = players[0];
+  const rest = players.slice(1);
+  const result = [];
+  for (let i = 0; i < rest.length; i++) {
+    const partner = rest[i];
+    const remaining = rest.filter((_, j) => j !== i);
+    const sub = generatePairings(remaining);
+    for (const s of sub) result.push([[first, partner], ...s]);
+  }
+  return result;
+}
+
+function permute3(arr) {
+  // All permutations of a 3-element array (for assigning teams to lines)
+  return [
+    [arr[0],arr[1],arr[2]], [arr[0],arr[2],arr[1]],
+    [arr[1],arr[0],arr[2]], [arr[1],arr[2],arr[0]],
+    [arr[2],arr[0],arr[1]], [arr[2],arr[1],arr[0]],
+  ];
+}
+
+function permute2(arr) {
+  // Both permutations of a 2-element array (for assigning teams to D1/D2)
+  return [[arr[0],arr[1]], [arr[1],arr[0]]];
+}
+
+function toggleOppUrl(key, event) {
+  event.stopPropagation();
+  const row = document.getElementById('opp_'+key+'_url_row');
+  row.classList.toggle('open');
+  if (row.classList.contains('open')) document.getElementById('opp_'+key+'_url').focus();
+}
+function updateOppLinkBtn(key) {
+  const url = document.getElementById('opp_'+key+'_url').value.trim();
+  document.getElementById('opp_'+key+'_link_btn').classList.toggle('active', url.length > 0);
+  clearTimeout(_oppFetchTimers[key]);
+  if (url.length > 20) _oppFetchTimers[key] = setTimeout(() => fetchOppQuality(key), 900);
+}
+
+function getOpponentData() {
+  if (mode === 'quick') {
+    return {
+      s1: { name:'Opponent S1', rating:3.75 },
+      s2: { name:'Opponent S2', rating:3.70 },
+      d1: { p1:{name:'Opp D1-1',rating:3.75}, p2:{name:'Opp D1-2',rating:3.75} },
+      d2: { p1:{name:'Opp D2-1',rating:3.70}, p2:{name:'Opp D2-2',rating:3.70} },
+      d3: { p1:{name:'Opp D3-1',rating:3.65}, p2:{name:'Opp D3-2',rating:3.65} },
+    };
+  }
+  const v = id => document.getElementById(id)?.value || '';
+  const n = id => parseFloat(v(id)) || null;
+  const u = key => v('opp_'+key+'_url').trim();
+  const q = key => { const url = u(key); return url ? (oppUrlCache[url]?.adultWinPct ?? null) : null; };
+  return {
+    s1: { name: v('opp_s1_name') || 'Opponent S1', rating: n('opp_s1_rating') || 3.75, url: u('s1'), adultWinPct: q('s1') },
+    s2: { name: v('opp_s2_name') || 'Opponent S2', rating: n('opp_s2_rating') || 3.70, url: u('s2'), adultWinPct: q('s2') },
+    d1: { p1:{ name:v('opp_d1_p1_name')||'Opp', rating:n('opp_d1_p1_rating')||3.75, url:u('d1_p1'), adultWinPct:q('d1_p1') },
+          p2:{ name:v('opp_d1_p2_name')||'Opp', rating:n('opp_d1_p2_rating')||3.75, url:u('d1_p2'), adultWinPct:q('d1_p2') }},
+    d2: { p1:{ name:v('opp_d2_p1_name')||'Opp', rating:n('opp_d2_p1_rating')||3.70, url:u('d2_p1'), adultWinPct:q('d2_p1') },
+          p2:{ name:v('opp_d2_p2_name')||'Opp', rating:n('opp_d2_p2_rating')||3.70, url:u('d2_p2'), adultWinPct:q('d2_p2') }},
+    d3: { p1:{ name:v('opp_d3_p1_name')||'Opp', rating:n('opp_d3_p1_rating')||3.65, url:u('d3_p1'), adultWinPct:q('d3_p1') },
+          p2:{ name:v('opp_d3_p2_name')||'Opp', rating:n('opp_d3_p2_rating')||3.65, url:u('d3_p2'), adultWinPct:q('d3_p2') }},
+  };
+}
+
+function optimize() {
+  const avail = ROSTER.filter(p => available.has(p.id));
+  const min = format === 'short' ? 5 : 8;
+  if (avail.length < min) return;
+  const opp = getOpponentData();
+
+  // Helper: average adult win% for a doubles team (null if neither player has data)
+  function avgDWinPct(p1, p2) {
+    if (p1.adultWinPct == null && p2.adultWinPct == null) return null;
+    return ((p1.adultWinPct ?? p2.adultWinPct) + (p2.adultWinPct ?? p1.adultWinPct)) / 2;
+  }
+
+  if (format === 'short') {
+    // 1 Singles + 2 Doubles
+    const oppD = [
+      (opp.d1.p1.rating + opp.d1.p2.rating)/2,
+      (opp.d2.p1.rating + opp.d2.p2.rating)/2,
+    ];
+    const oppDQ = [avgDWinPct(opp.d1.p1, opp.d1.p2), avgDWinPct(opp.d2.p1, opp.d2.p2)];
+    const sCandidates = avail.filter(p => p.singlesCapable).sort((a,b) => b.singlesScore - a.singlesScore);
+    let allLineups = [];
+    for (let si = 0; si < Math.min(sCandidates.length, 5); si++) {
+      const s1player = sCandidates[si];
+      const doublesPool = avail.filter(p => p.id !== s1player.id)
+        .sort((a, b) => (b.rating * (0.5 + lineAdjWinPct(b))) - (a.rating * (0.5 + lineAdjWinPct(a))))
+        .slice(0, 10)
+        .map(p => p.id);
+      if (doublesPool.length < 4) continue;
+      const combos4 = doublesPool.length === 4 ? [doublesPool] : combinations(doublesPool, 4);
+      for (const group of combos4) {
+        const pairings = generatePairings(group);
+        for (const teams of pairings) {
+          const perms = permute2(teams);
+          for (const perm of perms) {
+            const s1score = scoreSingles(s1player.id, opp.s1.rating, opp.s1.adultWinPct);
+            const d1score = scoreDoublesVsOpp(perm[0][0], perm[0][1], oppD[0], oppDQ[0]);
+            const d2score = scoreDoublesVsOpp(perm[1][0], perm[1][1], oppD[1], oppDQ[1]);
+            const ga = id => lineAdjWinPct(ROSTER.find(r => r.id === id));
+            const d1Adj = (ga(perm[0][0]) + ga(perm[0][1])) / 2;
+            const d2Adj = (ga(perm[1][0]) + ga(perm[1][1])) / 2;
+            const lineAffinity = (d1Adj - d2Adj) * 15;
+            const total = s1score + d1score + d2score + lineAffinity;
+            allLineups.push({
+              s1: s1player.id,
+              d1: perm[0], d2: perm[1],
+              scores: { s1:s1score, d1:d1score, d2:d2score },
+              total
+            });
+          }
+        }
+      }
+    }
+    allLineups.sort((a,b) => b.total - a.total);
+    if (allLineups.length === 0) return;
+    renderResults(allLineups.slice(0, 5), opp);
+    return;
+  }
+
+  // Standard format: 2 Singles + 3 Doubles
+  const oppD = [
+    (opp.d1.p1.rating + opp.d1.p2.rating)/2,
+    (opp.d2.p1.rating + opp.d2.p2.rating)/2,
+    (opp.d3.p1.rating + opp.d3.p2.rating)/2,
+  ];
+  const oppDQ = [
+    avgDWinPct(opp.d1.p1, opp.d1.p2),
+    avgDWinPct(opp.d2.p1, opp.d2.p2),
+    avgDWinPct(opp.d3.p1, opp.d3.p2),
+  ];
+
+  // Find singles candidates — only players marked singlesCapable, sorted by singlesScore desc
+  const sCandidates = avail.filter(p => p.singlesCapable).sort((a,b) => b.singlesScore - a.singlesScore);
+
+  let allLineups = [];
+
+  // Try different S1/S2 combos
+  for (let si = 0; si < Math.min(sCandidates.length, 4); si++) {
+    for (let sj = si+1; sj < Math.min(sCandidates.length, 6); sj++) {
+      const s1player = sCandidates[si];
+      const s2player = sCandidates[sj];
+      // Remaining for doubles — cap at top 12 by rating×winPct to keep combinations fast
+      const doublesPool = avail.filter(p => p.id !== s1player.id && p.id !== s2player.id)
+        .sort((a, b) => (b.rating * (0.5 + lineAdjWinPct(b))) - (a.rating * (0.5 + lineAdjWinPct(a))))
+        .slice(0, 12)
+        .map(p => p.id);
+      if (doublesPool.length < 6) continue;
+
+      // Choose 6 from pool (if > 6)
+      const combos6 = doublesPool.length === 6 ? [doublesPool] : combinations(doublesPool, 6);
+
+      for (const group of combos6) {
+        const pairings = generatePairings(group);
+        for (const teams of pairings) {
+          // Try all assignments to D1/D2/D3
+          const perms = permute3(teams);
+          for (const perm of perms) {
+            const s1score = scoreSingles(s1player.id, opp.s1.rating, opp.s1.adultWinPct);
+            const s2score = scoreSingles(s2player.id, opp.s2.rating, opp.s2.adultWinPct);
+            const d1score = scoreDoublesVsOpp(perm[0][0], perm[0][1], oppD[0], oppDQ[0]);
+            const d2score = scoreDoublesVsOpp(perm[1][0], perm[1][1], oppD[1], oppDQ[1]);
+            const d3score = scoreDoublesVsOpp(perm[2][0], perm[2][1], oppD[2], oppDQ[2]);
+            const ga = id => lineAdjWinPct(ROSTER.find(r => r.id === id));
+            const d1Adj = (ga(perm[0][0]) + ga(perm[0][1])) / 2;
+            const d3Adj = (ga(perm[2][0]) + ga(perm[2][1])) / 2;
+            const lineAffinity = (d1Adj - d3Adj) * 25;
+            const total = s1score + s2score + d1score + d2score + d3score + lineAffinity;
+
+            allLineups.push({
+              s1: s1player.id, s2: s2player.id,
+              d1: perm[0], d2: perm[1], d3: perm[2],
+              scores: { s1:s1score, s2:s2score, d1:d1score, d2:d2score, d3:d3score },
+              total
+            });
+          }
+        }
+      }
+    }
+  }
+
+  // Sort by total score
+  allLineups.sort((a,b) => b.total - a.total);
+
+  if (allLineups.length === 0) return;
+
+  renderResults(allLineups.slice(0, 5), opp);
+}
+
+function combinations(arr, k) {
+  if (k === 0) return [[]];
+  if (arr.length < k) return [];
+  const result = [];
+  for (let i = 0; i <= arr.length - k; i++) {
+    const rest = combinations(arr.slice(i + 1), k - 1);
+    for (const r of rest) result.push([arr[i], ...r]);
+  }
+  return result;
+}
+
+// ===================== RENDER RESULTS =====================
+function renderResults(lineups, opp) {
+  const best = lineups[0];
+  const maxPossible = 500;
+  const confPct = Math.min(95, Math.max(25, Math.round((best.total / maxPossible) * 100 + 20)));
+
+  let html = '';
+
+  // Match header
+  html += `
+    <div class="match-header">
+      <div class="match-title">RECOMMENDED LINEUP</div>
+      <div class="match-subtitle">Based on availability, partnerships &amp; opponent matchups</div>
+      <div class="confidence-bar-wrap">
+        <div class="confidence-label"><span>Match Confidence</span><strong>${confPct}%</strong></div>
+        <div class="confidence-track"><div class="confidence-fill" style="width:${confPct}%"></div></div>
+      </div>
+    </div>`;
+
+  // Singles lines
+  html += renderSinglesCard('S1', best.s1, opp.s1, best.scores.s1);
+  if (format === 'standard') html += renderSinglesCard('S2', best.s2, opp.s2, best.scores.s2);
+
+  // Doubles lines
+  html += renderDoublesCard('D1', best.d1, opp.d1, best.scores.d1);
+  html += renderDoublesCard('D2', best.d2, opp.d2, best.scores.d2);
+  if (format === 'standard') html += renderDoublesCard('D3', best.d3, opp.d3, best.scores.d3);
+
+  // Warnings
+  html += renderWarnings(best);
+
+  // Alternatives
+  if (lineups.length > 1) {
+    html += `<div class="alt-section"><div class="alt-title">ALTERNATIVE LINEUPS</div>`;
+    for (let i = 1; i < Math.min(lineups.length, 4); i++) {
+      const alt = lineups[i];
+      const p = id => ROSTER.find(r => r.id === id);
+      const pairStr = (ids) => `${p(ids[0]).name.split(' ')[1]} + ${p(ids[1]).name.split(' ')[1]}`;
+      const scoreDiff = Math.round(best.total - alt.total);
+      const altLines = format === 'short'
+        ? `S1: ${p(alt.s1).name}<br>D1: ${pairStr(alt.d1)} &middot; D2: ${pairStr(alt.d2)}`
+        : `S1: ${p(alt.s1).name} &middot; S2: ${p(alt.s2).name}<br>D1: ${pairStr(alt.d1)} &middot; D2: ${pairStr(alt.d2)} &middot; D3: ${pairStr(alt.d3)}`;
+      html += `
+        <div class="alt-card" onclick="showAlt(${i})">
+          <div class="alt-card-top">
+            <div class="alt-rank">Option ${i+1}</div>
+            <div class="alt-score">${scoreDiff > 0 ? '-' + scoreDiff + ' pts' : 'Same'}</div>
+          </div>
+          <div class="alt-lines">${altLines}</div>
+        </div>`;
+    }
+    html += `</div>`;
+  }
+
+  const results = document.getElementById('results');
+  results.innerHTML = html + `<div class="save-lineup-wrap"><button class="save-lineup-btn" onclick="window.print()">&#8681; Save / Print Lineup</button></div>`;
+  results.classList.add('visible');
+  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderSinglesCard(label, playerId, oppData, score) {
+  const p = ROSTER.find(r => r.id === playerId);
+  const edge = p.rating - (oppData.rating || 3.70);
+  const edgeClass = edge > 0.05 ? 'edge-pos' : edge < -0.05 ? 'edge-neg' : 'edge-neutral';
+  const edgeText = edge > 0 ? `+${edge.toFixed(2)} rating edge` : edge < 0 ? `${edge.toFixed(2)} rating gap` : 'Even matchup';
+  const confPct = Math.min(90, Math.max(20, Math.round(50 + edge * 80 + p.winPct40 * 30)));
+  const confColor = confPct >= 65 ? 'var(--green)' : confPct >= 45 ? 'var(--amber)' : 'var(--red)';
+  const confLabel = confPct >= 65 ? 'Favorable' : confPct >= 45 ? 'Competitive' : 'Tough';
+
+  let reasoning = '';
+  if (p.id === 'burner') {
+    reasoning = `<strong>Singles specialist.</strong> Strong 2025 (34-11, 76%). <strong style="color:var(--red)">Caution: 2-18 in 2026</strong> — significant drop in form. Monitor closely before placing.`;
+  } else if (p.id === 'pavia') {
+    reasoning = `<strong style="color:var(--red)">WARNING:</strong> Meredith is 2-14 at 4.0 across 2025-2026 (12% win rate). High risk placement.`;
+  } else {
+    const t = p.record26.w + p.record26.l;
+    reasoning = `<strong>${p.name}</strong> — 2026 record: ${p.record26.w}-${p.record26.l}. ${p.record26.note || ''}`;
+  }
+
+  return `
+    <div class="line-card">
+      <div class="line-top">
+        <div class="line-label">${label} &mdash; SINGLES</div>
+        <div class="line-confidence">
+          <div class="line-conf-dot" style="background:${confColor}"></div>
+          <div class="line-conf-text" style="color:${confColor}">${confLabel}</div>
+        </div>
+      </div>
+      <div class="line-body">
+        <span class="rating-edge ${edgeClass}">${edgeText}</span>
+        <div class="line-matchup">
+          <div class="line-team">
+            <div class="line-player">${p.name} <span class="line-player-rating">(${p.rating.toFixed(2)})</span></div>
+          </div>
+          <div class="line-vs">VS</div>
+          <div class="line-opp">
+            <div class="line-opp-name">${oppData.url ? `<a href="${oppData.url}" target="_blank" rel="noopener" style="color:var(--text-sec);text-decoration:none;border-bottom:1px solid var(--gold)">${oppData.name || 'TBD'}</a>` : (oppData.name || 'TBD')}</div>
+            <div class="line-opp-rating">${oppData.rating ? oppData.rating.toFixed(2) : '?'}</div>
+          </div>
+        </div>
+        <div class="line-reasoning">${reasoning}</div>
+      </div>
+    </div>`;
+}
+
+function renderDoublesCard(label, teamIds, oppData, score) {
+  const p1 = ROSTER.find(r => r.id === teamIds[0]);
+  const p2 = ROSTER.find(r => r.id === teamIds[1]);
+  const teamAvg = (p1.rating + p2.rating) / 2;
+  const oppAvg = ((oppData.p1.rating || 3.70) + (oppData.p2.rating || 3.70)) / 2;
+  const edge = teamAvg - oppAvg;
+  const edgeClass = edge > 0.05 ? 'edge-pos' : edge < -0.05 ? 'edge-neg' : 'edge-neutral';
+  const edgeText = edge > 0 ? `+${edge.toFixed(2)} rating edge` : edge < 0 ? `${edge.toFixed(2)} rating gap` : 'Even matchup';
+
+  const partnership = getPartnership(teamIds[0], teamIds[1]);
+  const avoided = isAvoided(teamIds[0], teamIds[1]);
+
+  let confPct = Math.min(90, Math.max(15, Math.round(50 + edge * 60 + (partnership ? (partnership.w/(partnership.w+partnership.l||1)) * 25 : 0))));
+  if (avoided) confPct = Math.max(15, confPct - 30);
+  const confColor = confPct >= 62 ? 'var(--green)' : confPct >= 42 ? 'var(--amber)' : 'var(--red)';
+  const confLabel = confPct >= 62 ? 'Favorable' : confPct >= 42 ? 'Competitive' : 'Tough';
+
+  const sideTag = (side) => {
+    if (side === 'ad') return '<span class="line-player-side" style="background:#3B82F622;color:#3B82F6">Ad</span>';
+    if (side === 'deuce') return '<span class="line-player-side" style="background:#10B98122;color:#10B981">Deu</span>';
+    return '<span class="line-player-side" style="background:#8B5CF622;color:#8B5CF6">Flex</span>';
+  };
+
+  let reasoning = '';
+  if (partnership) {
+    const total = partnership.w + partnership.l;
+    const pct = total > 0 ? Math.round((partnership.w/total)*100) : 0;
+    reasoning += `<span class="partnership-record">${partnership.w}-${partnership.l} (${pct}%)</span> `;
+    reasoning += partnership.note + '. ';
+    if (partnership.trending === 'up') reasoning += '<strong style="color:#059669">Trending up.</strong> ';
+    if (partnership.trending === 'down') reasoning += '<strong style="color:var(--red)">Trending down.</strong> ';
+  } else {
+    reasoning += 'No partnership history on record. ';
+  }
+  if (avoided) {
+    reasoning += `<br><strong style="color:var(--red)">WARNING: ${avoided.reason}</strong>`;
+  }
+
+  const sides = [p1.side, p2.side];
+  if (sides.includes('ad') && sides.includes('deuce')) {
+    reasoning += 'Side fit: excellent (Ad + Deuce).';
+  } else if (sides.includes('both')) {
+    reasoning += 'Side fit: good (one player is flexible).';
+  } else {
+    reasoning += 'Side fit: suboptimal (same preferred side).';
+  }
+
+  return `
+    <div class="line-card">
+      <div class="line-top">
+        <div class="line-label">${label} &mdash; DOUBLES</div>
+        <div class="line-confidence">
+          <div class="line-conf-dot" style="background:${confColor}"></div>
+          <div class="line-conf-text" style="color:${confColor}">${confLabel}</div>
+        </div>
+      </div>
+      <div class="line-body">
+        <span class="rating-edge ${edgeClass}">${edgeText}</span>
+        <div class="line-matchup">
+          <div class="line-team">
+            <div class="line-player">${p1.name} ${sideTag(p1.side)} <span class="line-player-rating">(${p1.rating.toFixed(2)})</span></div>
+            <div class="line-player" style="margin-top:4px">${p2.name} ${sideTag(p2.side)} <span class="line-player-rating">(${p2.rating.toFixed(2)})</span></div>
+          </div>
+          <div class="line-vs">VS</div>
+          <div class="line-opp">
+            <div class="line-opp-name">${oppData.p1.url ? `<a href="${oppData.p1.url}" target="_blank" rel="noopener" style="color:var(--text-sec);text-decoration:none;border-bottom:1px solid var(--gold)">${oppData.p1.name||'TBD'}</a>` : (oppData.p1.name||'TBD')} <span class="line-opp-rating">(${oppData.p1.rating ? oppData.p1.rating.toFixed(2) : '?'})</span></div>
+            <div class="line-opp-name" style="margin-top:4px">${oppData.p2.url ? `<a href="${oppData.p2.url}" target="_blank" rel="noopener" style="color:var(--text-sec);text-decoration:none;border-bottom:1px solid var(--gold)">${oppData.p2.name||'TBD'}</a>` : (oppData.p2.name||'TBD')} <span class="line-opp-rating">(${oppData.p2.rating ? oppData.p2.rating.toFixed(2) : '?'})</span></div>
+          </div>
+        </div>
+        <div class="line-reasoning">${reasoning}</div>
+      </div>
+    </div>`;
+}
+
+function renderWarnings(lineup) {
+  const warnings = [];
+  const p = id => ROSTER.find(r => r.id === id);
+
+  // Pavia check
+  const allIds = [lineup.s1, lineup.s2, ...lineup.d1, ...lineup.d2, ...lineup.d3];
+  if (allIds.includes('pavia')) {
+    warnings.push({ level:'red', icon:'&#9888;', text: PAVIA_WARNING });
+  }
+
+  // Avoid checks
+  const dPairs = [lineup.d1, lineup.d2, lineup.d3];
+  for (const pair of dPairs) {
+    const avoided = isAvoided(pair[0], pair[1]);
+    if (avoided) {
+      warnings.push({ level:'red', icon:'&#9888;', text:`${p(pair[0]).name} + ${p(pair[1]).name}: ${avoided.reason}` });
+    }
+  }
+
+  // Liu without Rice
+  if (allIds.includes('liu') && !allIds.includes('rice')) {
+    warnings.push({ level:'amber', icon:'&#9888;', text:'Angela Liu is in the lineup without Jennifer Rice. She is 1-8 without Rice at 4.0.' });
+  }
+  // Check if Liu is paired with someone other than Rice in doubles
+  for (const pair of dPairs) {
+    if (pair.includes('liu') && !pair.includes('rice')) {
+      warnings.push({ level:'red', icon:'&#9888;', text:`Angela Liu is paired with ${p(pair.find(x=>x!=='liu')).name} instead of Jennifer Rice. Record without Rice: 1-8.` });
+    }
+  }
+
+  // Burner in doubles
+  if (dPairs.some(pair => pair.includes('burner'))) {
+    warnings.push({ level:'amber', icon:'&#9679;', text:'Hayley Burner is assigned to doubles. She is a singles specialist — consider keeping her in singles.' });
+  }
+
+  // Positive notes
+  for (const pair of dPairs) {
+    const ps = getPartnership(pair[0], pair[1]);
+    if (ps && ps.w > 0 && ps.l === 0) {
+      warnings.push({ level:'green', icon:'&#10003;', text:`${p(pair[0]).name} + ${p(pair[1]).name}: Undefeated together (${ps.w}-0)` });
+    }
+    if (ps && ps.trending === 'up') {
+      warnings.push({ level:'green', icon:'&#9650;', text:`${p(pair[0]).name} + ${p(pair[1]).name}: Partnership trending upward` });
+    }
+  }
+
+  if (warnings.length === 0) return '';
+
+  let html = '<div class="warnings">';
+  for (const w of warnings) {
+    html += `<div class="warning-card warn-${w.level}"><span class="warning-icon">${w.icon}</span><span>${w.text}</span></div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function showAlt(idx) {
+  // Scroll back up and regenerate with that lineup as primary
+  // For now just alert
+  alert('Tap "Generate" again to see full details. Alternative lineups are shown for comparison.');
+}
+
+// ===================== PASTE ROSTER & URL LOOKUP =====================
+function togglePastePanel() {
+  const panel = document.getElementById('pastePanel');
+  panel.classList.toggle('open');
+}
+
+function extractPlayer(text) {
+  const ratingMatch = text.match(/\b([34]\.\d{1,4})\b/);
+  if (!ratingMatch) return null;
+  const rating = parseFloat(ratingMatch[1]);
+  let name = text.replace(ratingMatch[0], '').replace(/[:\-|]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!name) name = 'Unknown';
+  return { name, rating };
+}
+
+function fillField(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value !== undefined && value !== null ? value : '';
+}
+
+function extractAdultMatches(html) {
+  // Parse win/loss records from Adult NTRP sections only, excluding Combo and Mixed.
+  // Also extracts opponent ratings from match rows to compute quality-adjusted win%.
+  let wins = 0, losses = 0;
+  const winOppRatings = [], lossOppRatings = [];
+  const rows = html.match(/<tr[\s\S]*?<\/tr>/gi) || [];
+  let inAdult = true; // TennisRecord typically shows Adult first
+  for (const row of rows) {
+    const text = row.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    // Section header rows have colspan and short text with league-type words
+    if (/colspan\s*=\s*["']?\d+/i.test(row) && text.length < 120) {
+      const lower = text.toLowerCase();
+      if (/\bcombo\b/.test(lower) || /\bmixed\b/.test(lower)) { inAdult = false; continue; }
+      if (/\badult\b/.test(lower) || /\bntrp\b/.test(lower) || /\bsenior\b/.test(lower)) { inAdult = true; continue; }
+    }
+    if (!inAdult) continue;
+    const isWin  = /class="[^"]*\bwin\b/i.test(row)  || />\s*W\s*<\/(td|th)>/i.test(row);
+    const isLoss = /class="[^"]*\bloss\b/i.test(row) || />\s*L\s*<\/(td|th)>/i.test(row);
+    if (!isWin && !isLoss) continue;
+    // Extract opponent rating: a decimal like 3.75 in the valid NTRP range
+    const oppRating = [...row.matchAll(/\b([234]\.\d{2,4})\b/g)]
+      .map(m => parseFloat(m[1])).find(r => r >= 2.5 && r <= 4.5) ?? null;
+    if (isWin)  { wins++;   if (oppRating) winOppRatings.push(oppRating); }
+    else        { losses++; if (oppRating) lossOppRatings.push(oppRating); }
+  }
+  return { wins, losses, winOppRatings, lossOppRatings };
+}
+
+async function fetchTennisRecordData(url) {
+  try {
+    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+    const resp = await fetch(proxy);
+    const data = await resp.json();
+    const raw = data.contents || '';
+    const html = raw.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '');
+
+    // Player name
+    const nameMatch = url.match(/playername=([^&]+)/i);
+    let name = nameMatch ? decodeURIComponent(nameMatch[1]).replace(/\+/g, ' ') : null;
+    if (!name) { const t = html.match(/<title[^>]*>([^<|]+)/i); name = t ? t[1].trim() : 'Unknown'; }
+
+    // Rating: prefer a 4-decimal number NOT immediately preceded by Combo/Mixed context
+    let rating = null;
+    for (const m of [...html.matchAll(/(\d\.\d{4})/g)]) {
+      const ctx = html.slice(Math.max(0, m.index - 300), m.index).toLowerCase();
+      if (!ctx.includes('combo') && !ctx.includes('mixed')) { rating = parseFloat(m[1]); break; }
+    }
+    if (!rating) { const rm = html.match(/(\d\.\d{4})/); if (rm) rating = parseFloat(rm[1]); }
+
+    // Adult-only match record
+    const { wins, losses, winOppRatings, lossOppRatings } = extractAdultMatches(html);
+    const total = wins + losses;
+    let adultWinPct = total > 0 ? wins / total : null;
+
+    // Quality adjustment: if we have opponent ratings, weight wins vs higher-rated opponents
+    const allOppR = [...winOppRatings, ...lossOppRatings];
+    if (adultWinPct !== null && allOppR.length >= 3) {
+      const avgOpp  = allOppR.reduce((a, b) => a + b, 0) / allOppR.length;
+      const avgWOpp = winOppRatings.length > 0 ? winOppRatings.reduce((a, b) => a + b, 0) / winOppRatings.length : avgOpp;
+      // Each 0.10 rating point above average opponent in wins shifts quality +5%
+      const boost = (avgWOpp - avgOpp) * 0.5;
+      adultWinPct = Math.min(0.95, Math.max(0.05, adultWinPct + boost));
+    }
+
+    return { name, rating, record: { w: wins, l: losses }, adultWinPct };
+  } catch(e) { return null; }
+}
+
+// Kept as alias so any existing callers still work
+const fetchTennisRecordRating = fetchTennisRecordData;
+
+// Auto-fetch opponent TennisRecord URLs and show record inline
+async function fetchOppQuality(key) {
+  const urlEl = document.getElementById('opp_' + key + '_url');
+  if (!urlEl) return;
+  const url = urlEl.value.trim();
+  if (!url || !url.includes('tennisrecord')) return;
+
+  // Show loading indicator
+  let info = document.getElementById('opp_info_' + key);
+  if (!info) {
+    info = document.createElement('div');
+    info.id = 'opp_info_' + key;
+    info.style.cssText = 'padding:2px 0 6px 56px;font-size:11px;';
+    const urlRow = document.getElementById('opp_' + key + '_url_row');
+    if (urlRow) urlRow.insertAdjacentElement('afterend', info);
+  }
+  info.innerHTML = '<span style="color:var(--text-light)">Fetching adult record…</span>';
+
+  const fetched = await fetchTennisRecordData(url);
+  if (!fetched) { info.innerHTML = ''; return; }
+
+  // Cache by URL
+  oppUrlCache[url] = { record: fetched.record, adultWinPct: fetched.adultWinPct };
+
+  // Fill name/rating if fields are empty
+  const nameEl   = document.getElementById('opp_' + key + '_name');
+  const ratingEl = document.getElementById('opp_' + key + '_rating');
+  if (nameEl   && !nameEl.value   && fetched.name   && fetched.name !== 'Unknown') nameEl.value = fetched.name;
+  if (ratingEl && !ratingEl.value && fetched.rating) ratingEl.value = fetched.rating;
+
+  // Display record
+  const { w, l } = fetched.record || { w: 0, l: 0 };
+  const tot = w + l;
+  if (tot > 0) {
+    const rawPct  = Math.round(w / tot * 100);
+    const qualPct = fetched.adultWinPct != null ? Math.round(fetched.adultWinPct * 100) : null;
+    const qualStr = qualPct != null && qualPct !== rawPct ? ` · Quality-adj: ${qualPct}%` : '';
+    info.innerHTML = `<span style="color:var(--text-sec)">Adult NTRP: <strong>${w}W–${l}L</strong> (${rawPct}%)${qualStr}</span>`;
+  } else {
+    info.innerHTML = `<span style="color:var(--text-light)">No adult match history found${fetched.rating ? ` · Rating: ${fetched.rating}` : ''}</span>`;
+  }
+}
+
+async function lookupAddPlayerUrl() {
+  const url = document.getElementById('add_url').value.trim();
+  if (!url) return;
+  const btn = document.getElementById('addLookupBtn');
+  btn.textContent = '...'; btn.disabled = true;
+  const player = await fetchTennisRecordRating(url);
+  btn.textContent = 'Lookup'; btn.disabled = false;
+  if (!player) { alert('Could not fetch rating. Check the URL and try again.'); return; }
+  if (player.name && player.name !== 'Unknown') {
+    const parts = player.name.trim().split(/\s+/);
+    document.getElementById('add_fname').value = parts[0] || '';
+    document.getElementById('add_lname').value = parts.slice(1).join(' ') || '';
+  }
+  document.getElementById('add_rating').value = player.rating;
+}
+
+async function fillFromPaste() {
+  const text = document.getElementById('pasteText').value;
+  if (!text.trim()) return;
+
+  const fillBtn = document.querySelector('.paste-btn-fill');
+  fillBtn.textContent = 'Loading...'; fillBtn.disabled = true;
+
+  // Separate URL lines from text lines
+  const urlLines = [], nonUrlLines = [];
+  text.split('\n').forEach(line => {
+    (/https?:\/\/.*tennisrecord/i.test(line) ? urlLines : nonUrlLines).push(line.trim());
+  });
+
+  // Fetch any URLs in parallel
+  const urlPlayers = [];
+  if (urlLines.length) {
+    const fetches = urlLines.map(line => {
+      const m = line.match(/https?:\/\/\S+/i);
+      return m ? fetchTennisRecordData(m[0]).then(d => d ? { ...d, _url: m[0] } : null) : Promise.resolve(null);
+    });
+    const results = await Promise.allSettled(fetches);
+    results.forEach(r => {
+      if (r.status === 'fulfilled' && r.value) {
+        urlPlayers.push(r.value);
+        // Cache quality data keyed by URL
+        if (r.value._url && r.value.adultWinPct != null) {
+          oppUrlCache[r.value._url] = { record: r.value.record, adultWinPct: r.value.adultWinPct };
+        }
+      }
+    });
+  }
+
+  // Parse non-URL lines
+  const lines = nonUrlLines.filter(l => l);
+  const posMap = { s1:[], s2:[], d1:[], d2:[], d3:[] };
+  let usedLabels = false;
+
+  for (const line of lines) {
+    const posMatch = line.match(/^(s1|s2|d1|d2|d3)\s*[:\s]\s*/i);
+    if (posMatch) {
+      usedLabels = true;
+      const pos = posMatch[1].toLowerCase();
+      const rest = line.slice(posMatch[0].length);
+      rest.split(/[\/,]/).map(p => p.trim()).filter(p => p).forEach(part => {
+        const player = extractPlayer(part);
+        if (player) posMap[pos].push(player);
+      });
+    }
+  }
+
+  if (usedLabels) {
+    // Add URL-fetched players to unassigned positions
+    urlPlayers.forEach(p => {
+      const emptyPos = ['s1','s2','d1','d2','d3'].find(k => posMap[k].length < (k==='s1'||k==='s2'?1:2));
+      if (emptyPos) posMap[emptyPos].push(p);
+    });
+    fillField('opp_s1_name', posMap.s1[0]?.name); fillField('opp_s1_rating', posMap.s1[0]?.rating);
+    fillField('opp_s2_name', posMap.s2[0]?.name); fillField('opp_s2_rating', posMap.s2[0]?.rating);
+    fillField('opp_d1_p1_name', posMap.d1[0]?.name); fillField('opp_d1_p1_rating', posMap.d1[0]?.rating);
+    fillField('opp_d1_p2_name', posMap.d1[1]?.name); fillField('opp_d1_p2_rating', posMap.d1[1]?.rating);
+    fillField('opp_d2_p1_name', posMap.d2[0]?.name); fillField('opp_d2_p1_rating', posMap.d2[0]?.rating);
+    fillField('opp_d2_p2_name', posMap.d2[1]?.name); fillField('opp_d2_p2_rating', posMap.d2[1]?.rating);
+    fillField('opp_d3_p1_name', posMap.d3[0]?.name); fillField('opp_d3_p1_rating', posMap.d3[0]?.rating);
+    fillField('opp_d3_p2_name', posMap.d3[1]?.name); fillField('opp_d3_p2_rating', posMap.d3[1]?.rating);
+  } else {
+    const allPlayers = [...urlPlayers];
+    for (const line of lines) {
+      line.split(/[\/,]/).map(p => p.trim()).filter(p => p).forEach(part => {
+        const player = extractPlayer(part);
+        if (player) allPlayers.push(player);
+      });
+    }
+    allPlayers.sort((a, b) => b.rating - a.rating);
+    const slots = [
+      ['opp_s1_name','opp_s1_rating'],['opp_s2_name','opp_s2_rating'],
+      ['opp_d1_p1_name','opp_d1_p1_rating'],['opp_d1_p2_name','opp_d1_p2_rating'],
+      ['opp_d2_p1_name','opp_d2_p1_rating'],['opp_d2_p2_name','opp_d2_p2_rating'],
+      ['opp_d3_p1_name','opp_d3_p1_rating'],['opp_d3_p2_name','opp_d3_p2_rating'],
+    ];
+    slots.forEach(([n, r], i) => {
+      fillField(n, allPlayers[i]?.name); fillField(r, allPlayers[i]?.rating);
+    });
+  }
+
+  fillBtn.textContent = 'Fill Lineup'; fillBtn.disabled = false;
+  if (!document.getElementById('modeFull').classList.contains('active')) setMode('full');
+  togglePastePanel();
+  document.getElementById('pasteText').value = '';
+}
+
+// Init
+init();
 </script>
 </body>
 </html>
