@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Rafael RC — Lineup Optimizer</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0B1A2E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rafael RC">
+<link rel="apple-touch-icon" href="favicon.svg">
 <meta property="og:title" content="Rafael RC Lineup Optimizer">
 <meta property="og:description" content="Rafael RC 4.0 Women's lineup optimizer. Mark availability, scout opponents, and generate the optimal lineup based on ratings, partnerships, and matchups.">
 <meta property="og:image" content="https://rrc.tennislineup.ai/preview.svg">
@@ -2128,6 +2134,11 @@ async function fillFromPaste() {
 
 // Init
 init();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
 </script>
 </body>
 </html>
