@@ -657,10 +657,10 @@ const BASE_ROSTER = [
     singlesCapable:false, captain:false,
     record25:{w:16,l:15,note:"W 3.5+4.0"}, record26:{w:6,l:9,note:"W 3.5+4.0"},
     winPct40:.48, tags:[], singlesScore:25 },
-  { id:"volpi", name:"Lauren Volpi", rating:3.72, side:"ad", line:"doubles",
-    singlesCapable:false, captain:false,
+  { id:"volpi", name:"Lauren Volpi", rating:3.72, side:"ad", line:"both",
+    singlesCapable:true, captain:false,
     record25:{w:12,l:10,note:"W 3.5+4.0"}, record26:{w:9,l:7,note:"W 3.5+4.0"},
-    winPct40:.55, tags:[], singlesScore:30 },
+    winPct40:.55, tags:["Flex"], singlesScore:45 },
   { id:"burner", name:"Hayley Burner", rating:3.68, side:"deuce", line:"singles",
     singlesCapable:true, captain:false,
     record25:{w:18,l:6,note:"W 3.5+4.0"}, record26:{w:2,l:18,note:"W 3.5+4.0"},
@@ -745,15 +745,19 @@ const BASE_ROSTER = [
 
 const BASE_PARTNERSHIPS = [
   { p:["mcmillan","mcgeehan"], w:2, l:0, note:"Dominant wins (6-4,6-1 & 6-4,6-1)", trending:"up" },
-  { p:["hoffman","klein"], w:2, l:0, note:"Excellent chemistry, untested in 2026", trending:"up" },
-  { p:["klein","wear"], w:5, l:1, note:"Strong — includes 6-1,6-1 blowout in 2026", trending:"up" },
-  { p:["volpi","wear"], w:5, l:2, note:"Reliable across both levels", trending:"up" },
+  { p:["hoffman","klein"], w:2, l:0, note:"Excellent chemistry, untested in 2026", trending:"stable" },
+  { p:["klein","wear"], w:6, l:1, note:"Dominant — 6-1 combined, winning in 2026", trending:"up" },
+  { p:["volpi","wear"], w:7, l:2, note:"Best partnership on team — 2 more wins in 2026 spring", trending:"up" },
+  { p:["wear","anderson"], w:7, l:2, note:"Proven chemistry — 7-2 overall, win in 2026", trending:"up" },
   { p:["hoffman","mcmillan"], w:1, l:0, note:"New pairing — gutsy 7-6,7-5 win", trending:"up" },
-  { p:["volpi","klein"], w:2, l:2, note:"Won last 2 after 0-2 start", trending:"stable" },
-  { p:["rice","liu"], w:4, l:3, note:"Declining from 3-1 to 4-3 combined", trending:"stable" },
-  { p:["wear","anderson"], w:6, l:2, note:"Proven chemistry over 8 matches", trending:"up" },
+  { p:["volpi","klein"], w:3, l:4, note:"Struggling in 2026 — 1-2 this season, below .500", trending:"down" },
+  { p:["rice","liu"], w:5, l:3, note:"Improving — 5-3 after 40+ win in 2026", trending:"up" },
   { p:["hoffman","wear"], w:0, l:0, note:"Complementary styles, untested", trending:"neutral", estimated:true },
   { p:["hoffman","mcgeehan"], w:5, l:5, note:"Inconsistent — 50%, ceiling at 3.85 opp", trending:"stable" },
+  { p:["klein","mcmillan"], w:1, l:0, note:"New 2026 pairing — won debut together (DT)", trending:"up" },
+  { p:["hoffman","volpi"], w:1, l:0, note:"New 2026 pairing — won together at Marin CC (40+)", trending:"up" },
+  { p:["hoffman","rice"], w:1, l:0, note:"New 2026 pairing — part of 3-0 win at Belvedere (40+)", trending:"up" },
+  { p:["rice","mcgeehan"], w:1, l:0, note:"New 2026 pairing — part of 2-1 win at Marin CC (40+)", trending:"up" },
 ];
 
 function loadPartnerships() {
@@ -768,7 +772,7 @@ let PARTNERSHIPS = loadPartnerships();
 
 const AVOID = [
   { p:["mcgeehan","klein"], w:0, l:2, reason:"Cannot close matches together" },
-  { p:["mcgeehan","volpi"], w:0, l:1, reason:"Lost 02/08, style mismatch" },
+  { p:["mcgeehan","volpi"], w:0, l:3, reason:"0-3 together across 2025-2026 — pattern of losses" },
   { p:["liu","*"], w:1, l:8, reason:"1-8 without Rice at 4.0", except:["rice"] },
 ];
 
