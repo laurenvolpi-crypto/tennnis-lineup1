@@ -1,4 +1,4 @@
-const CACHE = 'rrc-lineup-v1';
+const CACHE = 'rrc-lineup-v2';
 const ASSETS = ['/', '/index.html', '/favicon.svg', '/manifest.json'];
 
 self.addEventListener('install', e => {
