@@ -1,5 +1,5 @@
-const CACHE = 'rrc-lineup-v2';
-const ASSETS = ['/', '/index.html', '/favicon.svg', '/manifest.json'];
+const CACHE = 'rrc-lineup-v3';
+const ASSETS = ['/', '/index.html', '/favicon.svg', '/manifest.json', '/docs/', '/docs/index.html'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
